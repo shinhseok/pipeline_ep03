@@ -158,7 +158,7 @@ API 전달 순서:
 
 ### 전략 3: 지시 충돌 감사(Audit) 및 프롬프트 단순화
 
-**문제**: flow_prompt 보일러플레이트가 10~15줄이며 서로 상충 가능한 지시가 공존
+**문제**: image_prompt 보일러플레이트가 10~15줄이며 서로 상충 가능한 지시가 공존
 
 **감사 기준**: 아래 패턴이 동일 프롬프트에 공존하면 충돌 위험
 
@@ -181,7 +181,7 @@ API 전달 순서:
   - 배경색 강제 (#FFFFFF)
   - 역할 계층 (identity / appearance / style)
 
-프롬프트가 담당하는 것 (flow_prompt):
+프롬프트가 담당하는 것 (image_prompt):
   - 씬 묘사 (동작, 구도, 소품 배치)
   - 캐릭터 고유 특성 (표정 금지, 체색)
   - 감정/분위기
@@ -194,7 +194,7 @@ API 전달 순서:
 
 **문제**: `{{CHAR_BODY}}`, `{{BG_WHITE}}`, `{{MARGIN_STYLE}}`, `{{NO_REFSHEET}}` 가 정의만 되고 미사용
 
-**개선 방향**: visual-director가 생성하는 flow_prompt에서 마커를 적극 사용하도록 SKILL.md 강화
+**개선 방향**: visual-director가 생성하는 image_prompt에서 마커를 적극 사용하도록 SKILL.md 강화
 
 **기대 효과**:
 - 보일러플레이트 텍스트가 **단일 소스**(generate_images.py)에서만 관리됨
@@ -248,7 +248,7 @@ API 전달 순서:
 └─────────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────────┐
-│  flow_prompt 본문 (visual-director가 작성)           │
+│  image_prompt 본문 (visual-director가 작성)           │
 │                                                      │
 │  담당: 씬 고유 연출 (동작, 구도, 소품 배치,          │
 │        감정/분위기, refer-to 지시)                    │
@@ -267,10 +267,10 @@ API 전달 순서:
 |------|------|----------|----------|
 | **전략 1** | ✅ 완료 | `scripts/generate_images.py` | IMAGE_LABELS에 `[IDENTITY SOURCE]`, `[APPEARANCE SOURCE]`, `[OBJECT SOURCE]`, `[STYLE SOURCE]` 태그 추가. costume_ref의 체형 충돌 지시 제거. character_ref의 중복 배경색 제거. |
 | **전략 2** | ✅ 완료 (전략 5와 통합) | `visual-director/SKILL.md` §6-1 | 의상 Shot refer-to에 character_ref 필수 포함 표준화 |
-| **전략 3** | ✅ 완료 (전략 6으로 해결) | `visual-director/SKILL.md` §6-6 | 3계층 역할 분리로 충돌 근본 제거. Labels가 처리하는 지시는 flow_prompt에서 제거 원칙 명시 |
+| **전략 3** | ✅ 완료 (전략 6으로 해결) | `visual-director/SKILL.md` §6-6 | 3계층 역할 분리로 충돌 근본 제거. Labels가 처리하는 지시는 image_prompt에서 제거 원칙 명시 |
 | **전략 4** | ✅ 완료 | `generate_images.py` + `SKILL.md` §9, §9-2 | `{{CHAR_BODY_COSTUME}}`, `{{FACE_END}}` 마커 추가. NB2 템플릿 3종 마커 기반으로 재작성. 사용 규칙을 "선택 사용"→"NB2 필수 사용"으로 격상 |
 | **전략 5** | ✅ 완료 | `visual-director/SKILL.md` §6-1 | 8종 Shot 유형별 이미지 조합 + refer-to 패턴 표준 테이블. 최대 3장 원칙. |
-| **전략 6** | ✅ 완료 | `visual-director/SKILL.md` §6-6 | IMAGE_LABELS(시스템) → TEMPLATE_MARKERS(유형별) → flow_prompt 본문(씬 고유) 3계층 분리 |
+| **전략 6** | ✅ 완료 | `visual-director/SKILL.md` §6-6 | IMAGE_LABELS(시스템) → TEMPLATE_MARKERS(유형별) → image_prompt 본문(씬 고유) 3계층 분리 |
 
 ### 추가 변경 사항
 - `SKILL.md` §11 출력 형식 예시: 마커 기반 + 새 refer-to 패턴(`for body shape`)으로 업데이트

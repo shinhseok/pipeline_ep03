@@ -52,10 +52,9 @@
 | content-planner (sonnet) | STEP 02 | STEP 03 이후 대본 작성 |
 | script-director (opus) | STEP 03 | 창의적 Shot 구성 결정 |
 | shot-composer (opus) | STEP 04 | 프롬프트 엔지니어링; 나레이션 태깅 |
-| visual-director (opus) | STEP 05 → delta | 캐릭터/소품 일관성 유지 범위 내에서 창의적 장면 연출 + flow_prompt 작성 |
+| visual-director (opus) | STEP 05 → delta | 캐릭터/소품 일관성 유지 범위 내에서 창의적 장면 연출 + image_prompt 작성 |
 | audio-director (haiku) | STEP 06 → delta | 창의적 결정; 매트릭스 기반 태깅만 |
 | merge_records.py | MERGE | 04 base + 05 delta + 06 delta → Shot Record |
-| render_storyboard.py | RENDER | 코드 렌더링 (LLM 불필요) |
 | youtube-publisher (sonnet) | STEP 11 | 기획안 메타데이터 최종화만; 대본·Shot Record 수정 금지 |
 | 수동 | STEP 01, 09, 10 | AI 자동화 불가 |
 

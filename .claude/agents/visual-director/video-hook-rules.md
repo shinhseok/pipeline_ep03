@@ -55,15 +55,15 @@
 ### 구조
 
 - 각 Shot = **1개 Key Frame 이미지** (해당 시대/장면에서의 연기 포즈)
-- `flow_prompt` = 단일 (해당 KF 이미지 생성용)
+- `image_prompt` = 단일 (해당 KF 이미지 생성용)
 - `video_prompt` = 영어, KF_N → KF_{N+1} 키네틱 트랜지션 묘사
 - `video_start_image` = 자기 Shot 이미지
 - `video_end_image` = 다음 Shot 이미지
 - 마지막 Shot = landing frame (`hook_media_type: image`, 전환 없음)
 
-### flow_prompt 규칙
+### image_prompt 규칙
 
-기존 v3 순수 한국어 서술형 5단락과 동일. `flow_prompt[start]/[end]` 분리 없음.
+기존 v3 순수 한국어 서술형 5단락과 동일. `image_prompt[start]/[end]` 분리 없음.
 각 KF 이미지의 연기 포즈를 개별적으로 묘사한다.
 
 ### video_prompt 구조 (영어)
@@ -132,7 +132,7 @@ ref_images:
   - characters/run002/artisan.jpeg
   - props/run002/spinning_jenny.jpeg
 thinking_level: high
-flow_prompt: |
+image_prompt: |
   {v3 순수 한국어 서술형 — 해당 KF 이미지 생성용}
 video_prompt: |
   {영어 — KF2→KF3 키네틱 트랜지션 묘사}
@@ -149,15 +149,15 @@ video_end_image: 09_assets/images/run002/shot03.png
 
 ## Mode B: Per-Shot (레거시)
 
-### flow_prompt[start] / [end] 분리 규칙
+### image_prompt[start] / [end] 분리 규칙
 
 단일 Shot 내에서 Start→End 변환이 필요한 경우.
 
 ```yaml
-flow_prompt[start]: |
-  {Start Image용 — 기존 flow_prompt 규칙과 동일}
+image_prompt[start]: |
+  {Start Image용 — 기존 image_prompt 규칙과 동일}
 
-flow_prompt[end]: |
+image_prompt[end]: |
   {End Image용 — Start와 동일 has_human·art_style, 상태만 변경}
   # 또는 null (1장만 필요한 Shot)
 ```

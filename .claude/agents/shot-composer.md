@@ -4,7 +4,7 @@ description: >
   STEP 04 agent. Two-phase execution:
   PHASE A (single agent): narration density analysis → narration_map + ANCHOR (user approval required).
   PHASE B (parallel per-section agents): creative direction per shot using confirmed narration_map.
-  Output: base shot files only — flow_prompt and narration fields written by downstream agents.
+  Output: base shot files only — image_prompt and narration fields written by downstream agents.
 model: opus
 tools: Read, Write, Glob, Grep
 ---
@@ -17,7 +17,10 @@ tools: Read, Write, Glob, Grep
 
 | 결정하는 것 | 결정하지 않는 것 |
 |------------|----------------|
-| Shot 경계, `clip_rhythm`, `creative_intent`, `line_of_action`, 씬 유형, 감정 태그/뉘앙스, 예상 시간, 소품·변장 ANCHOR | Flow 이미지 프롬프트 (→ STEP 05), ElevenLabs Audio Tag / BGM·SFX (→ STEP 06) |
+| Shot 경계, `clip_rhythm`, `creative_intent`, `line_of_action`, 씬 유형, 감정 태그/뉘앙스, 예상 시간, 소품·변장 ANCHOR, 보조 캐릭터 배치 (`secondary_chars`) | Image 프롬프트 (→ STEP 05), ElevenLabs Audio Tag / BGM·SFX (→ STEP 06) |
+
+> **[보조] 나레이터**: 대본에 `[보조]` 태그가 있는 대사는 보조 캐릭터(happy_rabbit) 등장 Shot.
+> `secondary_chars: [happy_rabbit]` 설정 필수. 상세: `execution-flow.md` ⑧.5 참조.
 
 > **스키마**: `pipeline_reference.md §14` 참조. STEP 04는 담당 필드만 작성. 나머지는 `~`.
 > **델타 원칙**: STEP 05·06은 별도 파일(delta)로 출력. merge_records.py가 병합.
@@ -334,7 +337,7 @@ Counterpoint 위반: {shot_id 또는 "없음"}
 - ❌ PHASE B에서 narration_span 변경·분리·병합
 - ❌ narration_map 없이 Shot 파일 생성
 - ❌ ANCHOR 없이 소품·변장 등장 Shot 설계
-- ❌ flow_prompt / el_narration / BGM·SFX 작성 (→ STEP 05, 06)
+- ❌ image_prompt / el_narration / BGM·SFX 작성 (→ STEP 05, 06)
 
 #### B. 리듬 · 연속성
 

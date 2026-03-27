@@ -33,7 +33,6 @@ STEPS = [
     ("04", "Shot 구성", "04_shot_composition"),
     ("05", "비주얼 디렉팅", "05_visual_direction"),
     ("06", "Shot Record Build", "07_shot_records"),
-    ("08", "스토리보드", "08_storyboard"),
     ("09", "에셋 생성", "09_assets"),
     ("10", "편집", None),
 ]
@@ -161,7 +160,6 @@ def show_status(project: str):
                 "04": "/run-directing (Shot 구성)",
                 "05": "/run-directing (비주얼 디렉팅)",
                 "06": "/run-directing (Shot Record 빌드)",
-                "08": "/run-directing (스토리보드 렌더)",
                 "09": "/generate-images (에셋 생성)",
                 "10": "CapCut 편집 후 업로드",
             }

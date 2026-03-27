@@ -7,8 +7,8 @@ Before saving each shot, verify all items:
 - [ ] `ref_images` YAML 배열 존재 (참조 이미지 있을 때)
 - [ ] `thinking_level` YAML 필드 존재 (`high` 기본)
 - [ ] `has_human` 값이 3값 중 하나: `main` / `anonym` / `none`
-- [ ] flow_prompt에 구조적 태그 **없음**: `[thinking:`, `[SCENE]`, `[MUST]`, `[SOURCE REFERENCES]`, `TASK:` 없어야 함
-- [ ] flow_prompt가 순수 한국어 서술문임 (영어 태그/라벨 없음)
+- [ ] image_prompt에 구조적 태그 **없음**: `[thinking:`, `[SCENE]`, `[MUST]`, `[SOURCE REFERENCES]`, `TASK:` 없어야 함
+- [ ] image_prompt가 순수 한국어 서술문임 (영어 태그/라벨 없음)
 - [ ] 4단락 구조 준수: P1(과제) → P2(배경) → P3(구도/감정) → P4(채색)
 
 ## B. 서술 품질 (Narrative Quality)
@@ -19,8 +19,9 @@ Before saving each shot, verify all items:
 - [ ] **P3 크기 3중**: 수치(N%) + 상대비교 + 은유 모두 존재 (has_human: main/anonym)
 - [ ] **P3 감정**: emotion_tag에 맞는 한국어 표정·포즈 묘사 자연 통합 (has_human: main)
 - [ ] **P3 위치**: 오프센터 배치
-- [ ] **P4 최소 채색 보장**: 캐릭터 있는 shot = 최소 2색(캐릭터 1 + 장면 1), 없는 shot = 최소 1색. 채색 0곳 금지
-- [ ] **P4 색 계획 + 선 질감**: 채색 대상과 색상 명시 + "떨리는 손그림 느낌" 스케치 강조 문구 포함
+- [ ] **P4 캐릭터 색**: has_human:main/anonym → 캐릭터 색 별도 지정 없음 + "참조 이미지의 색을 그대로 유지" 문구 포함
+- [ ] **P4 장면 포인트**: 장면 포인트 최소 1색 지정. 채색 0곳 금지.
+- [ ] **P4 선 질감**: "떨리는 손그림 느낌" 스케치 강조 문구 포함
 - [ ] has_human: none → P3에서 소품/환경 구도 묘사
 
 ## C. ref_images 완전성 검증
@@ -49,11 +50,19 @@ Before saving each shot, verify all items:
 - [ ] 환경 구조물 (L3+) → "얇고 연한 잉크 윤곽선으로만~" 포함
 - [ ] 실루엣 Shot → 얼굴 규칙 제거 (모순 방지)
 
+## F-0. iv_prompt 검증
+
+- [ ] [CAMERA]가 shot-composer [카메라] 모션 시퀀스를 반영했는가 (Static 남발 금지)
+- [ ] [ACTION]에 구체적 동사가 있는가 (상태 묘사 "is standing" 금지)
+- [ ] [ACTION]이 모션 아크 3단계(시작→정점→여운)를 포함하는가
+- [ ] [ENVIRONMENT] 적절한 환경 효과 또는 None
+- [ ] [AUDIO] SFX가 emotion_tag와 일치
+
 ## F. NB2 품질 (Quality)
 
 - [ ] 품질 접미사 없음 (4k, masterpiece, HD)
 - [ ] hex 코드 없음 (#FFFFFF 등)
-- [ ] **THIS {name} 일치**: flow_prompt의 THIS {name}이 ref_images 파일명 stem과 일치
+- [ ] **THIS {name} 일치**: image_prompt의 THIS {name}이 ref_images 파일명 stem과 일치
 - [ ] 부정문 과다 없음 (동일 금지 표현 4회 이상 반복 금지)
 - [ ] "frame", "border", "panel" 표현 없음
 - [ ] 대문자 구역 레이블 없음 ("LEFT ZONE —" 등 → NB2가 텍스트로 렌더링)

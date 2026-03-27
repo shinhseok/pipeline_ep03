@@ -32,7 +32,7 @@ runs:
     description: "Full run"
     created: "2026-03-09"
     sections: null          # null = 전체 섹션
-    stages_done: [04_shot_composition, 05_visual_direction, 06_audio_narration, 07_shot_records, 08_storyboard]
+    stages_done: [04_shot_composition, 05_visual_direction, 06_audio_narration, 07_shot_records]
   - run_id: run002
     description: "SEC01 수정"
     created: "2026-03-10"
@@ -76,7 +76,6 @@ run001 (2026-03-09) — 전체
   ✅ 05_visual_direction
   ✅ 06_audio_narration
   ✅ 07_shot_records
-  ✅ 08_storyboard
 
 run002 (2026-03-10) — SECTION01
   ✅ 04_shot_composition

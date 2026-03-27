@@ -21,8 +21,8 @@
 (PRE) RUN_ID 확인
 → version_manifest.yaml에서 current_run 읽기 (없으면 v1)
 
-(A) FLOW_MODEL 선택 (사용자에게 1회)
-→ NB-Pro (복잡 소품·변장) / NB2 (빠른 초안)
+(A) IMAGE_MODEL 확인
+→ NB2 고정 (ANCHOR 헤더에 IMAGE_MODEL: NB2 기록)
 
 (B) ANCHOR 사전 초안
 → ⚠️ anchor-generation.md 읽기 (상세 규칙 참조)
@@ -75,7 +75,7 @@
     - 캐릭터 에너지 아크를 가사/음악 에너지와 동기화
     - 각 Shot = 1개 Key Frame 이미지 (캐릭터가 프레임 안에 명확히 존재)
     - KF 간 캐릭터 포즈가 연속적 — 급격한 자세 변화 금지
-    - flow_prompt = 단일 (해당 KF 이미지 생성용)
+    - image_prompt = 단일 (해당 KF 이미지 생성용)
     - creative_intent에 `[Kinetic Transition]` 태그 명시:
       ```
       [Kinetic Transition] KF{N} → KF{N+1}.
@@ -88,7 +88,7 @@
     - 군중 실루엣: character_reference.jpeg 참조 (main_turnaround 사용 금지)
     - ⚠️ **이동 방향 일관성**: 피사체의 기본 이동 방향은 전체 KF에 걸쳐 일관. 방향 전환 시 카메라 회전으로 처리.
   - **Per-Shot (레거시)**: Shot별 start/end 이미지 분리 생성. 제자리 변환.
-    - flow_prompt[start] + flow_prompt[end] 분리 작성
+    - image_prompt[start] + image_prompt[end] 분리 작성
     - creative_intent의 `[카메라]` 태그에 `[Video: 1장]` 또는 `[Video: 2장]` 명시
 
 
@@ -103,6 +103,14 @@
 | `reveal` | 반전·핵심 통찰 ([REVEAL] 태그) | 1절 이하 | 2~3초 |
 | `tension` | 긴장·위기 ([TENSION] 태그) | 1절 이하 | 3~4초 |
 | `breath` | 감정 정점 직후 여운, 또는 전환 | 매우 짧거나 무나레이션 | 2~3초 |
+| `sub` | `[보조]` 태그가 붙은 보조 나레이터 대사 | 1문장 | 3~4초 |
+
+> **[보조] 대사 처리 규칙**:
+> - `[보조]` 대사는 **단독 Shot** 또는 직전/직후 해빛 대사와 **대화 Shot**으로 묶을 수 있음
+> - 대화 Shot: 해빛 + happy_rabbit 함께 등장 (두 나레이션을 1 Shot에 배치)
+> - 단독 Shot: happy_rabbit만 등장 (해빛 없이)
+> - shot-composer가 서사 흐름에 따라 판단 (강제 규칙 아님)
+> - scene_type: 주로 `Doodle-Character` 권장 (캐릭터 등장 Shot)
 
 > ⚠️ **문장 내 분할 허용**: 하나의 긴 문장이 여러 비주얼 장면을 포함하는 경우, 절(clause) 단위로 분할하여 각각 별도 Shot으로 배정할 수 있다. 방송에서는 한 문장 안에서도 컷이 바뀌는 것이 자연스럽다. 단, 같은 나레이션을 두 Shot이 중복 사용하는 것은 금지.
 
@@ -131,9 +139,10 @@ Section별 기준 템포:
 📋 NARRATION MAP — {SECTION명}
 기준 템포: {N}초/Shot | 예상 Shot 수: {N}개
 
-| local_id | 유형 | duration_est | emotion_tag | scene_type | visual_direction | narration_span |
-|----------|------|-------------|------------|-----------|-----------------|----------------|
-| 01 | info | 4초 | AWE | Doodle-Illust | 거대한 시간의 흐름 속 작은 사람 | "인류는 수천 년 동안 거의 같은 수준으로 살았거든요." |
+| local_id | 유형 | duration_est | emotion_tag | scene_type | 화자 | visual_direction | narration_span |
+|----------|------|-------------|------------|-----------|------|-----------------|----------------|
+| 01 | info | 4초 | AWE | Doodle-Illust | 해빛 | 거대한 시간의 흐름 속 작은 사람 | "인류는 수천 년 동안 거의 같은 수준으로 살았거든요." |
+| 02 | sub | 4초 | HUMOR | Doodle-Character | 보조 | happy_rabbit이 고개를 갸웃 | "[보조] 잠깐, 25배? 그게 마을이야 바이러스야?" |
 ...
 
 Section 합계: {N}개 Shot / {N}초
@@ -154,7 +163,7 @@ Section별: HOOK:{N} / SEC01:{N} / SEC02:{N} / SEC03:{N} / OUTRO:{N}
 | 대상 | Type | 파일명 | 적용 Section |
 |------|------|--------|-------------|
 
-FLOW_MODEL: {NB-Pro | NB2}
+IMAGE_MODEL: NB2
 ```
 
 → 사용자 승인 후 PHASE B 진행
@@ -170,7 +179,7 @@ FLOW_MODEL: {NB-Pro | NB2}
 ### STEP 3. ANCHOR 파일 확정 및 저장
 
 → ⚠️ anchor-generation.md 재확인 (Layer 4 JSON 작성 규칙)
-→ 승인된 묘사구로 ANCHOR 파일 생성 (FLOW_MODEL 기록)
+→ 승인된 묘사구로 ANCHOR 파일 생성 (IMAGE_MODEL 기록)
 → Layer 2 비주얼 ANCHOR 테이블 작성 (⏳ 상태로 초기화)
 → SAVE: 04_shot_composition/{RUN_ID}/ANCHOR.md
 
@@ -229,6 +238,13 @@ narration_map의 각 행(local_id 순)을 Shot으로 변환한다.
     - 그림자·실루엣 전용: costume_refs: []
     ⚠️ costume_refs: [] = 기본 해빛 (정상). 변장이 있을 때만 변장명 기재.
        has_human 값이 ref_images 캐릭터 소스를 결정하는 유일한 키.
+→ ⑧.5 보조 캐릭터 (secondary_chars) 설정:
+    - narration_span에 `[보조]` 태그가 있으면 → `secondary_chars: [happy_rabbit]`
+    - creative_intent에 happy_rabbit 배치 포함:
+      `[캐릭터수] 메인 1명 + 보조(happy_rabbit) 1명` (해빛과 함께 등장 시)
+      `[캐릭터수] 보조(happy_rabbit) 1명` (단독 등장 시)
+    - happy_rabbit도 특정 캐릭터이므로 has_human: main
+    - ⚠️ `[보조]` narration_span이 있는데 `secondary_chars`에 happy_rabbit이 없으면 위반
 → ⑨ has_human 초기 추정 (3값):
     - 해빛/변장 캐릭터 전신 등장 → `main`
     - 명명된 학자/역사인물이 직접 등장 → `main`
@@ -251,6 +267,7 @@ narration_map의 각 행(local_id 순)을 Shot으로 변환한다.
            - 소품/환경만 → none
     ☐ A-2: narration_span, scene_type, emotion_tag가 narration_map과 동일한가 (변경 금지)
     ☐ A-3: NB2 금지어 없음 (faint, ghost, afterimage, 4k, masterpiece, HD)
+    ☐ A-4: [보조] narration_span → secondary_chars: [happy_rabbit] 설정 확인
 
     === 그룹 B: 연출 품질 (위반 시 경고, 진행 가능) ===
     ☐ B-1: 이전 Shot과 시각 연속성 명시 ([이전샷] 태그)

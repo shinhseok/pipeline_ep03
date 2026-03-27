@@ -35,7 +35,7 @@ creative_intent: |
 ```
 
 → visual-director의 판단: L3인데 "실내"만 있고 구조물(기둥, 벽, 천장 구조 등)이 없다.
-→ 워크어라운드: narration_span("공장의 기계가 쉬지 않고 돌아갑니다")과 emotion_tag(TENSION)을 참고하여 flow_prompt P2에 "어두운 공장 내부, 높은 천장의 철골 구조물이 희미하게 보이는" 배경을 자체 생성.
+→ 워크어라운드: narration_span("공장의 기계가 쉬지 않고 돌아갑니다")과 emotion_tag(TENSION)을 참고하여 image_prompt P2에 "어두운 공장 내부, 높은 천장의 철골 구조물이 희미하게 보이는" 배경을 자체 생성.
 
 **문제 B**: shot27의 creative_intent에 "그림자 실루엣"이 언급되지만 has_human 필드가 없다.
 
@@ -62,7 +62,7 @@ items:
     field: creative_intent
     symptom: |
       [공간] L3 등급이 지정되었으나 구조물 서술이 "실내"만 존재.
-      flow_prompt P2에서 L3에 맞는 배경 요소를 작성할 근거 부족.
+      image_prompt P2에서 L3에 맞는 배경 요소를 작성할 근거 부족.
     root_cause: |
       추정: shot-composer가 밀도 등급을 L3으로 지정할 때
       [공간] 태그에 구조물 힌트를 구체적으로 기술하지 않은 것으로 보임.
@@ -72,7 +72,7 @@ items:
       캐릭터 선보다 연하고 가늘게. 구조물 외의 빈 공간은 순백."
     workaround: |
       narration_span("공장의 기계가 쉬지 않고 돌아갑니다")과 emotion_tag(TENSION)을
-      참고하여 flow_prompt P2에 "어두운 공장 내부, 높은 천장의 철골 구조물이 희미하게
+      참고하여 image_prompt P2에 "어두운 공장 내부, 높은 천장의 철골 구조물이 희미하게
       보이는" 배경을 자체 생성. 채색은 원래 계획대로 소품(톱니바퀴)에만 적용.
 
   - id: FB-002
@@ -100,7 +100,7 @@ items:
 ```
 [SECTION02 비주얼 디렉팅 완료]
 저장: 05_visual_direction/run001/SECTION02/ — 13개 파일 (delta, v3)
-Shot 수: 13개 | FLOW_MODEL: NB2
+Shot 수: 13개 | IMAGE_MODEL: NB2
 Upstream feedback: 2건 (BLOCK 0 / FLAG 2 / NOTE 0) → feedback/run001/ 기록
 ```
 

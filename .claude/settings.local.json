@@ -106,7 +106,9 @@
       "Bash(powershell.exe -Command \"\\(New-Object Net.WebClient\\).DownloadFile\\('https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe', \\\\\"$env:TEMP\\\\GoogleCloudSDKInstaller.exe\\\\\"\\); Write-Host \\\\\"Downloaded to: $env:TEMP\\\\GoogleCloudSDKInstaller.exe\\\\\"\")",
       "Bash(powershell.exe -Command \"Invoke-WebRequest -Uri 'https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe' -OutFile \\\\\"$env:TEMP\\\\\\\\GoogleCloudSDKInstaller.exe\\\\\" -UseBasicParsing; Write-Host \\\\\"Done: $env:TEMP\\\\\\\\GoogleCloudSDKInstaller.exe\\\\\"\")",
       "Bash(curl -L -o /tmp/GoogleCloudSDKInstaller.exe \"https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe\")",
-      "Bash(powershell.exe -Command \"Start-Process 'C:\\\\\\\\Users\\\\\\\\shinh\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\GoogleCloudSDKInstaller.exe' -Wait; Write-Host 'Installer launched'\")"
+      "Bash(powershell.exe -Command \"Start-Process 'C:\\\\\\\\Users\\\\\\\\shinh\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\GoogleCloudSDKInstaller.exe' -Wait; Write-Host 'Installer launched'\")",
+      "Bash(find C:/Users/shinh/Documents/ai_agent_works/workflow_test/ep03/projects/CH03/05_visual_direction/run003 -name *.md)",
+      "Bash(find C:/Users/shinh/Documents/ai_agent_works/workflow_test/ep03/projects/CH03/06_audio_narration/run003 -name *.md)"
     ]
   }
 }

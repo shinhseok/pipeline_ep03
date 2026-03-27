@@ -93,11 +93,11 @@ Claude에게 **스스로 검증하는 방법**을 제공하면 외부 피드백 
 ```markdown
 ---
 name: shot-quality-reviewer
-description: Shot Record의 flow_prompt 품질을 검토하고 NB2 패턴 오류를 찾는다
+description: Shot Record의 image_prompt 품질을 검토하고 NB2 패턴 오류를 찾는다
 tools: Read, Glob, Grep
 model: haiku
 ---
-NB2 flow_prompt 품질 검토 전문 에이전트.
+NB2 image_prompt 품질 검토 전문 에이전트.
 다음을 체크한다:
 - SUBJECT LOCK 누락 (costume_refs 있는 Shot)
 - THIS 키워드 누락 (refer-to의 costume_ref)
@@ -209,7 +209,7 @@ done
 |------|---------|
 | SECTION 간 전환 시 | `/clear` 실행 — Shot Record 컨텍스트 축적 방지 |
 | STEP 06 실행 전 | Plan Mode로 섹션 전체 전략 수립 → Normal Mode 실행 |
-| NB2 flow_prompt 품질 검토 | 서브에이전트 `shot-quality-reviewer` 생성 |
+| NB2 image_prompt 품질 검토 | 서브에이전트 `shot-quality-reviewer` 생성 |
 | STEP 04-08 전체 실행 | 단계별 모델 적절 분배 (Opus→STEP04/05, Haiku→07) |
 
 ### 10-2. 서브에이전트 추천 구성
@@ -218,7 +218,7 @@ done
 .claude/agents/
   ├── shot-quality-reviewer.md   # NB2 패턴 오류 탐지 (Haiku)
   ├── anchor-validator.md        # ANCHOR.md 구조 검증 (Haiku)
-  └── prompt-optimizer.md        # flow_prompt 최적화 제안 (Sonnet)
+  └── prompt-optimizer.md        # image_prompt 최적화 제안 (Sonnet)
 ```
 
 ### 10-3. Skill vs CLAUDE.md 분리 전략

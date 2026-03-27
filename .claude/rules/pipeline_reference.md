@@ -39,7 +39,6 @@
 | 06 | Visual delta | `projects/{PROJECT_CODE}/05_visual_direction/{RUN_ID}/` |
 | 07 | Audio delta | `projects/{PROJECT_CODE}/06_audio_narration/{RUN_ID}/` |
 | MERGE | Shot Records | `projects/{PROJECT_CODE}/07_shot_records/{RUN_ID}/` |
-| RENDER | Storyboard | `projects/{PROJECT_CODE}/08_storyboard/{RUN_ID}/` |
 | 09 | 이미지 에셋 | `projects/{PROJECT_CODE}/09_assets/images/{RUN_ID}/` |
 | 09 | 영상 에셋 | `projects/{PROJECT_CODE}/09_assets/videos/` |
 | 09 | 레퍼런스 | `projects/{PROJECT_CODE}/09_assets/reference/` |
@@ -80,9 +79,9 @@
 ### ElevenLabs Voice ID
 - `_meta.md`의 `VOICE_ID` 항목에 프로젝트 시작 시 1회 설정
 
-### STEP 05 Flow 이미지 모델 선택
-STEP 04 시작 시 NB-Pro(Gemini 3 Pro) vs NB2(Gemini 3.1 Flash) 중 1회 선택
-→ `04_shot_composition/{RUN_ID}/ANCHOR.md` 헤더 `FLOW_MODEL:` 기록
+### 이미지 모델
+NB2(Gemini 3.1 Flash)를 기본 모델로 사용한다.
+→ `04_shot_composition/{RUN_ID}/ANCHOR.md` 헤더 `IMAGE_MODEL: NB2` 기록
 
 ---
 
@@ -109,12 +108,12 @@ STEP 04 시작 시 NB-Pro(Gemini 3 Pro) vs NB2(Gemini 3.1 Flash) 중 1회 선택
 | `silhouette_note` | 04 | string (optional) | 실루엣 판독성 메모 (예: "측면 실루엣, 한 손 가리킴") |
 | `prop_refs` | 04 | list | ANCHOR 소품명 |
 | `costume_refs` | 04 | list | ANCHOR 변장명. 빈 배열 = 기본 해빛 (정상). 변장 시만 기재 (예: [stephenson]) |
-| `secondary_chars` | 04 | list | 보조 인물명 리스트 |
+| `secondary_chars` | 04 | list | 보조 인물명 리스트. [보조] 나레이터 = `[happy_rabbit]` (채널 공통 보조 캐릭터) |
 | `has_human` | 04→05 | enum | `main` / `anonym` / `none`. 05에서 최종 확정. ref_images 캐릭터 소스의 유일한 결정 키 |
 | `ref_images` | 05 | list | 참조 이미지 경로 배열 (순서 = 서수 참조). visual-director가 완전 구성. style_ref + 캐릭터 ref + 소품 ref 모두 포함 |
 | `thinking_level` | 05 | enum | `high` (기본) / `low` |
-| `flow_prompt` | 05 | text | 순수 한국어 서술형 4단락 |
-| `iv_prompt` | 05 | text | Veo 3 I2V 프롬프트 (전 Shot 필수 — Video-First) |
+| `image_prompt` | 05 | text | 순수 한국어 서술형 4단락 |
+| `iv_prompt` | 05 | text | Veo 3 I2V 프롬프트 (Canvas vs Director: [CAMERA]+[ACTION]+[ENVIRONMENT]+[AUDIO]) |
 | `scene_id` | 06 | int | 나레이션 Scene 그룹 |
 | `el_narration` | 06 | text | Audio Tag 포함 |
 | `bgm` | 06 | string | EL 프롬프트 포함 |
@@ -143,14 +142,14 @@ STEP 04 시작 시 NB-Pro(Gemini 3 Pro) vs NB2(Gemini 3.1 Flash) 중 1회 선택
 - **Video-First 참고**: 전체 Shot이 비디오 클립이므로, Hook 확장 필드는 Song Hook/특수 연출에만 관련
 - **Video Hook 연출 모드** (2종):
   - **Mode A — Kinetic Transition (권장)**: 연속 KF 이미지를 start/end로 사용. 캐릭터 이동+모션 블러로 장면 전환
-    - `flow_prompt` = **단일** (해당 KF 이미지 생성용, v3 순수 한국어)
+    - `image_prompt` = **단일** (해당 KF 이미지 생성용, v3 순수 한국어)
     - `video_start_image` = 자기 Shot 이미지 (`09_assets/images/{RUN_ID}/shot{N}.png`)
     - `video_end_image` = 다음 Shot 이미지 (`09_assets/images/{RUN_ID}/shot{N+1}.png`)
     - `video_prompt` = 영어, KF_N → KF_{N+1} 키네틱 트랜지션 묘사
     - 마지막 KF = landing frame (`hook_media_type: image`, video_prompt 없음)
     - 의상 전환 가능: 모션 블러/증기가 캐릭터를 가리는 순간 costume 변경
   - **Mode B — Per-Shot (레거시)**: Shot별 start/end 이미지 분리 생성. 제자리 변환
-    - `flow_prompt[start]` + `flow_prompt[end]` 분리 작성
+    - `image_prompt[start]` + `image_prompt[end]` 분리 작성
     - `video_start_image` = `shot{N}_start.png`, `video_end_image` = `shot{N}_end.png`
 - **이미지 생성 순서**: Video Hook → Phase 0 (Hook 이미지 우선) → Phase 1 (ANCHOR) → Phase 2 (씬)
 - **Song Hook 가사 기준**: 80~120 음절, 6~10줄, 30초 (중간 템포 ~4음절/초)

@@ -22,7 +22,7 @@ name: "스타일 이름"
 version: N
 
 # A. 씬 이미지용 (STEP 06)
-art_style: "..."           # flow_prompt JSON art_style 필드
+art_style: "..."           # image_prompt JSON art_style 필드
 background_default: "..."   # 기본 배경
 background_variants: {...}  # 환경 암시 확장
 redraw_constraint: "..."    # REDRAW constraint

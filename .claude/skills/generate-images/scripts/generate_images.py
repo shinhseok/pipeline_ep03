@@ -1,7 +1,7 @@
 """
 generate_images.py
 ==================
-flow_prompt에서 레퍼런스 이미지를 파싱하고
+image_prompt에서 레퍼런스 이미지를 파싱하고
 NB2 API(gemini-3.1-flash-image-preview)로 이미지를 생성합니다.
 
 ref_images YAML 필드에서 이미지 경로를 직접 읽음 (v3 서수 참조)
@@ -342,17 +342,17 @@ def parse_yaml_shot_records(text: str) -> list[dict]:
         m_path = re.search(r"^asset_path:\s*(.+)", block, re.MULTILINE)
         if not m_path:
             continue
-        # flow_prompt 또는 flow_prompt[start] (Video Hook) 매칭
+        # image_prompt 또는 image_prompt[start] (Video Hook) 매칭
         m_prompt = re.search(
-            r"^flow_prompt:\s*\|\s*\n(.*?)(?=\n[a-zA-Z_#]|\Z)",
+            r"^image_prompt:\s*\|\s*\n(.*?)(?=\n[a-zA-Z_#]|\Z)",
             block, re.MULTILINE | re.DOTALL
         )
         m_prompt_start = re.search(
-            r"^flow_prompt\[start\]:\s*\|\s*\n(.*?)(?=\n[a-zA-Z_#]|\nflow_prompt\[end\]|\Z)",
+            r"^image_prompt\[start\]:\s*\|\s*\n(.*?)(?=\n[a-zA-Z_#]|\nimage_prompt\[end\]|\Z)",
             block, re.MULTILINE | re.DOTALL
         )
         m_prompt_end = re.search(
-            r"^flow_prompt\[end\]:\s*\|\s*\n(.*?)(?=\n[a-zA-Z_#]|\Z)",
+            r"^image_prompt\[end\]:\s*\|\s*\n(.*?)(?=\n[a-zA-Z_#]|\Z)",
             block, re.MULTILINE | re.DOTALL
         )
 
@@ -363,7 +363,7 @@ def parse_yaml_shot_records(text: str) -> list[dict]:
             entry = {
                 "shot_id": m_id.group(1),
                 "asset_path": m_path.group(1).strip(),
-                "flow_prompt": prompt_raw,
+                "image_prompt": prompt_raw,
             }
             # v3 필드: ref_images, thinking_level, has_human
             ref_imgs = extract_ref_from_yaml(block)
@@ -384,11 +384,11 @@ def parse_yaml_shot_records(text: str) -> list[dict]:
             shot_entry = {
                 "shot_id": m_id.group(1),
                 "asset_path": m_path.group(1).strip(),
-                "flow_prompt": start_raw,  # start를 기본 flow_prompt로
-                "flow_prompt_start": start_raw,
+                "image_prompt": start_raw,  # start를 기본 image_prompt로
+                "image_prompt_start": start_raw,
             }
             if end_raw and end_raw not in ("~", "null"):
-                shot_entry["flow_prompt_end"] = end_raw
+                shot_entry["image_prompt_end"] = end_raw
             # v3 필드: ref_images, thinking_level, has_human (Video Hook도 동일하게 추출)
             ref_imgs = extract_ref_from_yaml(block)
             if ref_imgs:
@@ -456,8 +456,8 @@ def parse_anchor_phase1(anchor_text: str) -> list[dict]:
     return items
 
 
-def parse_hook_flow_prompts(flow_prompt_raw: str) -> tuple[str | None, str | None]:
-    """Video Hook flow_prompt에서 [start]와 [end] 섹션을 분리 추출.
+def parse_hook_image_prompts(image_prompt_raw: str) -> tuple[str | None, str | None]:
+    """Video Hook image_prompt에서 [start]와 [end] 섹션을 분리 추출.
 
     형식:
       [thinking: high]
@@ -472,8 +472,8 @@ def parse_hook_flow_prompts(flow_prompt_raw: str) -> tuple[str | None, str | Non
 
     반환: (start_prompt, end_prompt_or_none)
     """
-    m_start = re.search(r"\[start\]\s*\n(.*?)(?=\n\s*\[end\]|\Z)", flow_prompt_raw, re.DOTALL)
-    m_end = re.search(r"\[end\]\s*\n(.*?)$", flow_prompt_raw, re.DOTALL)
+    m_start = re.search(r"\[start\]\s*\n(.*?)(?=\n\s*\[end\]|\Z)", image_prompt_raw, re.DOTALL)
+    m_end = re.search(r"\[end\]\s*\n(.*?)$", image_prompt_raw, re.DOTALL)
 
     start = m_start.group(1).strip() if m_start else None
     end_raw = m_end.group(1).strip() if m_end else None
@@ -483,7 +483,7 @@ def parse_hook_flow_prompts(flow_prompt_raw: str) -> tuple[str | None, str | Non
         end_raw = None
 
     # [SOURCE REFERENCES] 블록을 start/end 양쪽에 공유
-    src_match = re.search(r"(\[thinking:.*?\]\s*\n)?\s*(\[SOURCE REFERENCES\].*?)(?=\n\s*\[start\])", flow_prompt_raw, re.DOTALL)
+    src_match = re.search(r"(\[thinking:.*?\]\s*\n)?\s*(\[SOURCE REFERENCES\].*?)(?=\n\s*\[start\])", image_prompt_raw, re.DOTALL)
     shared_header = src_match.group(0).strip() if src_match else ""
 
     if start and shared_header:
@@ -498,7 +498,7 @@ def run_phase0(client, project_root: Path, run_id: str, reference_dir: Path, ove
     """Video Hook Shot의 start/end 이미지를 생성한다 (Phase 0).
 
     대상: SECTION00_HOOK 폴더의 hook_media_type: video Shot만.
-    입력: flow_prompt [start] / [end] 태그 분리.
+    입력: image_prompt [start] / [end] 태그 분리.
     출력: 09_assets/images/{run_id}/shot{N}_start.png, shot{N}_end.png
     """
     hook_dir = project_root / "05_visual_direction" / run_id / "SECTION00_HOOK"
@@ -529,27 +529,24 @@ def run_phase0(client, project_root: Path, run_id: str, reference_dir: Path, ove
             continue
         shot_id = m_id.group(1)
 
-        # flow_prompt 추출
+        # image_prompt 추출
         m_prompt = re.search(
-            r"^flow_prompt:\s*\|\s*\n(.*?)(?=\n[a-zA-Z_#]|\Z)",
+            r"^image_prompt:\s*\|\s*\n(.*?)(?=\n[a-zA-Z_#]|\Z)",
             text, re.MULTILINE | re.DOTALL
         )
         if not m_prompt:
-            print(f"   [Shot {shot_id}] ❌ flow_prompt를 찾을 수 없습니다")
+            print(f"   [Shot {shot_id}] ❌ image_prompt를 찾을 수 없습니다")
             continue
 
         prompt_raw = textwrap.dedent(m_prompt.group(1)).strip()
-        start_prompt, end_prompt = parse_hook_flow_prompts(prompt_raw)
+        start_prompt, end_prompt = parse_hook_image_prompts(prompt_raw)
 
         if not start_prompt:
-            print(f"   [Shot {shot_id}] ❌ flow_prompt [start] 태그를 찾을 수 없습니다")
+            print(f"   [Shot {shot_id}] ❌ image_prompt [start] 태그를 찾을 수 없습니다")
             continue
 
-        # 모델 선택
+        # 모델: NB2 고정
         model_str = "gemini-3.1-flash-image-preview"
-        m_model = re.search(r"^FLOW_MODEL:\s*(\S+)", text, re.MULTILINE)
-        if m_model and m_model.group(1).upper() == "NB-PRO":
-            model_str = "gemini-3-pro-image-preview"
 
         # ref_images YAML 필드에서 공통 레퍼런스 추출 (start/end 공유)
         ref_paths_shared = []
@@ -740,10 +737,8 @@ def process_file(client, filepath: Path, project_root: Path, reference_dir: Path
                  style_ref_path: Path = None, chain_mode: bool = False, chain_prev_image: Path = None):
     text = filepath.read_text(encoding="utf-8")
 
+    # 모델: NB2 고정
     model_str = "gemini-3.1-flash-image-preview"
-    m_model = re.search(r"^FLOW_MODEL:\s*(\S+)", text, re.MULTILINE)
-    if m_model and m_model.group(1).upper() == "NB-PRO":
-        model_str = "gemini-3-pro-image-preview"
 
     print(f"   > 사용 모델: {model_str}")
 
@@ -761,7 +756,7 @@ def process_file(client, filepath: Path, project_root: Path, reference_dir: Path
             _remap_asset_path(shot, current_run)
         shot_id = shot["shot_id"]
         asset_rel_path = shot["asset_path"]
-        prompt_raw = shot["flow_prompt"]
+        prompt_raw = shot["image_prompt"]
 
         if target_shot_ids is not None:
             try:

@@ -34,7 +34,6 @@ VALID_STAGES = [
     "05_visual_direction",
     "06_audio_narration",
     "07_shot_records",
-    "08_storyboard",
     "09_assets",
 ]
 VALID_SECTIONS = [

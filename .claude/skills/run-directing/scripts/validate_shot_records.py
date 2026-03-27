@@ -32,7 +32,7 @@ REQUIRED_FIELDS = {
         "scene_type", "has_human", "narration_span", "creative_intent",
     ],
     "05": [
-        "shot_id", "flow_prompt", "has_human",
+        "shot_id", "image_prompt", "has_human",
     ],
     "06_audio": [
         "shot_id", "scene_id", "el_narration", "bgm", "volume_mix",
@@ -40,7 +40,7 @@ REQUIRED_FIELDS = {
     "06": [
         "shot_id", "section", "local_id", "duration_est", "emotion_tag",
         "scene_type", "has_human", "narration_span", "creative_intent",
-        "flow_prompt", "el_narration", "bgm", "volume_mix",
+        "image_prompt", "el_narration", "bgm", "volume_mix",
         "asset_path", "status",
     ],
 }
@@ -76,7 +76,7 @@ def parse_yaml_field(content: str, field: str) -> str | None:
 
 
 def parse_multiline_field(content: str, field: str) -> str | None:
-    """멀티라인 필드 (flow_prompt 등) 추출. 빈 줄 포함 허용."""
+    """멀티라인 필드 (image_prompt 등) 추출. 빈 줄 포함 허용."""
     pattern = re.compile(
         rf"^{re.escape(field)}:\s*\|\n((?:(?:  .*|)\n)*)", re.MULTILINE
     )
@@ -98,8 +98,8 @@ def validate_shot_file(path: Path, step: str, strict: bool = False) -> list[dict
     for field in required:
         value = parse_yaml_field(content, field)
         if value is None:
-            # flow_prompt는 멀티라인일 수 있음
-            if field == "flow_prompt":
+            # image_prompt는 멀티라인일 수 있음
+            if field == "image_prompt":
                 value = parse_multiline_field(content, field)
             if value is None:
                 add_issue("ERROR", field, f"필수 필드 누락: {field}")
@@ -145,17 +145,17 @@ def validate_shot_file(path: Path, step: str, strict: bool = False) -> list[dict
     if scene_type_val is not None and scene_type_val not in VALID_SCENE_TYPES:
         add_issue("WARNING", "scene_type", f"알 수 없는 scene_type: '{scene_type_val}'")
 
-    # NB2 flow_prompt 검증 (05, 07 단계)
+    # NB2 image_prompt 검증 (05, 07 단계)
     if step in ("05", "06"):
-        flow_prompt = parse_multiline_field(content, "flow_prompt")
-        if flow_prompt is None:
-            flow_prompt = parse_yaml_field(content, "flow_prompt") or ""
+        image_prompt = parse_multiline_field(content, "image_prompt")
+        if image_prompt is None:
+            image_prompt = parse_yaml_field(content, "image_prompt") or ""
 
-        if flow_prompt:
+        if image_prompt:
             # 품질 접미사 금지어 검사
             for kw in BANNED_NB2_KEYWORDS:
-                if kw.lower() in flow_prompt.lower():
-                    add_issue("ERROR", "flow_prompt", f"NB2 금지 키워드 사용: '{kw}'")
+                if kw.lower() in image_prompt.lower():
+                    add_issue("ERROR", "image_prompt", f"NB2 금지 키워드 사용: '{kw}'")
 
             # v3 감지: ref_images YAML 필드 존재 → v3 (순수 한국어), 없으면 v2 (구조적 태그)
             is_v3 = parse_yaml_field(content, "ref_images") is not None or \
@@ -163,14 +163,14 @@ def validate_shot_file(path: Path, step: str, strict: bool = False) -> list[dict
 
             if not is_v3:
                 # v2 전용: [SOURCE REFERENCES] 블록 존재 여부
-                if "[SOURCE REFERENCES]" not in flow_prompt:
-                    add_issue("WARNING", "flow_prompt", "[SOURCE REFERENCES] 블록 없음 (v2)")
+                if "[SOURCE REFERENCES]" not in image_prompt:
+                    add_issue("WARNING", "image_prompt", "[SOURCE REFERENCES] 블록 없음 (v2)")
 
                 # v2 전용: costume_refs 있는데 [CHARACTER SOURCE] 없음
                 costume_refs_val = parse_yaml_field(content, "costume_refs")
                 if costume_refs_val and costume_refs_val not in {"[]", "null", "~", ""}:
-                    if "[CHARACTER SOURCE" not in flow_prompt:
-                        add_issue("WARNING", "flow_prompt", "costume_refs 있으나 [CHARACTER SOURCE] 없음 (v2)")
+                    if "[CHARACTER SOURCE" not in image_prompt:
+                        add_issue("WARNING", "image_prompt", "costume_refs 있으나 [CHARACTER SOURCE] 없음 (v2)")
 
     # Hook 확장 필드 검증 (SECTION00_HOOK Shot에만 적용)
     section_val = parse_yaml_field(content, "section") or ""

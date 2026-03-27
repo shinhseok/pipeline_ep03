@@ -1,7 +1,7 @@
 ---
 name: run-director
 description: >
-  Pipeline orchestrator for STEP 03~08. Validates prerequisites, delegates to script-director and shot-composer, spawns visual-director and audio-director in parallel (STEP 05+07), then runs merge and render scripts via Bash.
+  Pipeline orchestrator for STEP 03~MERGE. Validates prerequisites, delegates to script-director and shot-composer, spawns visual-director and audio-director in parallel (STEP 05+07), then runs merge script via Bash.
 tools: Read, Glob, Grep, Bash
 model: sonnet
 ---
@@ -10,9 +10,9 @@ model: sonnet
 
 ## Role
 
-Coordinate the ecowise-pipeline from STEP 03 to RENDER. Validate inputs, run scripts, and delegate Claude agent tasks in the correct order.
+Coordinate the ecowise-pipeline from STEP 03 to MERGE. Validate inputs, run scripts, and delegate Claude agent tasks in the correct order.
 
-**Direct execution** (via Bash): merge_records, render_storyboard, validate_shot_records
+**Direct execution** (via Bash): merge_records, validate_shot_records
 **Version management** (via Read/Edit on version_manifest.yaml): init, new-run, bump, status
 **Delegation** (subagents spawned by main session): script-director, shot-composer, visual-director, audio-director
 
@@ -41,7 +41,6 @@ Coordinate the ecowise-pipeline from STEP 03 to RENDER. Validate inputs, run scr
 | STEP 05 delta | `projects/{PROJECT_CODE}/05_visual_direction/{RUN_ID}/` | visual-director 위임 |
 | STEP 06 delta | `projects/{PROJECT_CODE}/06_audio_narration/{RUN_ID}/` | audio-director 위임 |
 | Shot Records | `projects/{PROJECT_CODE}/07_shot_records/{RUN_ID}/` | merge_records.py |
-| Storyboard | `projects/{PROJECT_CODE}/08_storyboard/{RUN_ID}/` | render_storyboard.py |
 
 ---
 
@@ -175,7 +174,7 @@ python .claude/skills/run-directing/scripts/validate_shot_records.py --project {
 Report after all complete:
 ```
 ✋ [STEP 05+07 완료 확인]
-06: 05_visual_direction/{RUN_ID}/{SECTION}/shot{N}.md (flow_prompt + has_human) × 6섹션
+06: 05_visual_direction/{RUN_ID}/{SECTION}/shot{N}.md (image_prompt + has_human) × 6섹션
 07: 06_audio_narration/{RUN_ID}/{SECTION}/shot{N}.md (el_narration + audio)
 수정 필요 시 말씀해 주세요. 진행하려면 "승인".
 ```
@@ -223,9 +222,9 @@ ls projects/{PROJECT_CODE}/feedback/{RUN_ID}/*.md 2>/dev/null
 
 5. prompt-auditor 보고서 + pipeline-monitor 이슈도 함께 수집하여 통합 보고.
 
-**STEP 1 — flow_prompt 구조 검증 (의무 게이트, merge 전 블로킹)**
+**STEP 1 — image_prompt 구조 검증 (의무 게이트, merge 전 블로킹)**
 ```bash
-python .claude/skills/run-directing/scripts/validate_flow_prompt.py --project {PROJECT_CODE} --source 06
+python .claude/skills/run-directing/scripts/validate_image_prompt.py --project {PROJECT_CODE} --source 06
 ```
 - 오류 발견 시 해당 shot 수정 후 재검증. 경고는 로그만.
 - 모든 ERROR 해결 후에만 다음 단계 진행.
@@ -247,19 +246,6 @@ ls projects/{PROJECT_CODE}/07_shot_records/{RUN_ID}/
 
 ---
 
-### RENDER
-
-```bash
-python .claude/skills/run-directing/scripts/render_storyboard.py --project {PROJECT_CODE}
-```
-
-Verify output:
-```bash
-ls projects/{PROJECT_CODE}/08_storyboard/{RUN_ID}/
-```
-
----
-
 ### COMPLETE
 
 ```
@@ -270,7 +256,6 @@ ls projects/{PROJECT_CODE}/08_storyboard/{RUN_ID}/
   STEP 05  05_visual_direction/{RUN_ID}/  [visual-director]
   STEP 06  06_audio_narration/{RUN_ID}/   [audio-director]
   MERGE    07_shot_records/{RUN_ID}/      [merge_records.py]
-  RENDER   08_storyboard/{RUN_ID}/        [render_storyboard.py]
 
 Next:
   1. ElevenLabs → 07_shot_records/{RUN_ID}/07_ALL.txt 붙여넣기
@@ -319,7 +304,7 @@ Action: {명확한 해결 지시}
 - ❌ 선행 단계 미완료 상태에서 다음 단계 실행
 - ❌ 사용자 승인 없이 단계 넘기기
 - ❌ version_manifest.yaml 없이 RUN_ID 임의 설정
-- ❌ merge/render 스크립트 실행 전 validate 스크립트 건너뛰기
+- ❌ merge 스크립트 실행 전 validate 스크립트 건너뛰기
 - ❌ 서브에이전트 출력 직접 수정 (재위임으로 처리)
 - ❌ BLOCK 피드백을 사용자 확인 없이 무시하고 merge 진행
 - ❌ 피드백 대상 에이전트의 파일을 run-director가 직접 수정 (재위임으로 처리)

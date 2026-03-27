@@ -1,13 +1,13 @@
 """
-validate_flow_prompt.py
-flow_prompt 내부 구조 자동 검증 스크립트 (v2/v3 듀얼 모드)
+validate_image_prompt.py
+image_prompt 내부 구조 자동 검증 스크립트 (v2/v3 듀얼 모드)
 
 사용법:
-  python scripts/validate_flow_prompt.py --project CH02              # current_run, 07_shot_records
-  python scripts/validate_flow_prompt.py --project CH02 --run run003 # 특정 run
-  python scripts/validate_flow_prompt.py --project CH02 --source 06  # 05_visual_direction (delta)
-  python scripts/validate_flow_prompt.py --project CH02 --strict      # 경고도 오류로 처리
-  python scripts/validate_flow_prompt.py --project CH02 --section SECTION01
+  python scripts/validate_image_prompt.py --project CH02              # current_run, 07_shot_records
+  python scripts/validate_image_prompt.py --project CH02 --run run003 # 특정 run
+  python scripts/validate_image_prompt.py --project CH02 --source 06  # 05_visual_direction (delta)
+  python scripts/validate_image_prompt.py --project CH02 --strict      # 경고도 오류로 처리
+  python scripts/validate_image_prompt.py --project CH02 --section SECTION01
 
 버전 자동 감지:
   v3: ref_images YAML 필드 존재 → v3 검증 (한국어 서술형)
@@ -190,8 +190,8 @@ V3_ORDINAL_PATTERN = re.compile(r"(첫\s*번째|두\s*번째|세\s*번째|네\s*
 
 # ─── v3 검증 로직 ────────────────────────────────────────────────────────────
 
-def validate_v3_flow_prompt(path: Path, check_emotion: bool = False, strict: bool = False) -> list[dict]:
-    """v3 Shot 파일의 flow_prompt 검증."""
+def validate_v3_image_prompt(path: Path, check_emotion: bool = False, strict: bool = False) -> list[dict]:
+    """v3 Shot 파일의 image_prompt 검증."""
     issues = []
     try:
         content = path.read_text(encoding="utf-8")
@@ -201,13 +201,13 @@ def validate_v3_flow_prompt(path: Path, check_emotion: bool = False, strict: boo
     def add(level: str, check: str, msg: str):
         issues.append({"level": level, "check": check, "message": msg, "file": str(path)})
 
-    # flow_prompt 추출
-    flow_prompt = parse_multiline_field(content, "flow_prompt")
-    if flow_prompt is None:
-        flow_prompt = parse_yaml_field(content, "flow_prompt") or ""
+    # image_prompt 추출
+    image_prompt = parse_multiline_field(content, "image_prompt")
+    if image_prompt is None:
+        image_prompt = parse_yaml_field(content, "image_prompt") or ""
 
-    if not flow_prompt.strip():
-        add("WARNING", "FLOW_PROMPT_EMPTY", "flow_prompt 필드 없음 — 검증 건너뜀")
+    if not image_prompt.strip():
+        add("WARNING", "FLOW_PROMPT_EMPTY", "image_prompt 필드 없음 — 검증 건너뜀")
         return issues
 
     has_human_str = (parse_yaml_field(content, "has_human") or "none").lower()
@@ -221,10 +221,10 @@ def validate_v3_flow_prompt(path: Path, check_emotion: bool = False, strict: boo
     has_human = is_main or is_anonym  # 사람 형태 존재 여부 (크기 표현 등에 사용)
 
     # ── Check 1: 구조적 태그 잔존 ──
-    m = V3_STRUCTURAL_TAG_PATTERN.search(flow_prompt)
+    m = V3_STRUCTURAL_TAG_PATTERN.search(image_prompt)
     if m:
         add("ERROR", "STRUCTURAL_TAG_FOUND",
-            f"v3 flow_prompt에 구조적 태그 잔존: '{m.group()}' — 순수 한국어 서술만 허용")
+            f"v3 image_prompt에 구조적 태그 잔존: '{m.group()}' — 순수 한국어 서술만 허용")
 
     # ── Check 2: ref_images 필드 ──
     ref_images = extract_ref_images_list(content)
@@ -238,58 +238,58 @@ def validate_v3_flow_prompt(path: Path, check_emotion: bool = False, strict: boo
                 "has_human:anonym이지만 character_reference.jpeg 미포함")
 
     # ── Check 3: 서수 참조 일치 ──
-    ordinals_in_prompt = V3_ORDINAL_PATTERN.findall(flow_prompt)
+    ordinals_in_prompt = V3_ORDINAL_PATTERN.findall(image_prompt)
     ordinal_count = len(set(ordinals_in_prompt))
     if ref_images and ordinal_count > len(ref_images):
         add("ERROR", "ORDINAL_MISMATCH",
             f"서수 참조 {ordinal_count}개 > ref_images {len(ref_images)}개 — 순서 불일치")
 
     # ── Check 4: 스타일 키워드 ──
-    if not V3_STYLE_KEYWORDS.search(flow_prompt):
+    if not V3_STYLE_KEYWORDS.search(image_prompt):
         add("WARNING", "STYLE_KW_MISSING",
             "스타일 키워드 누락 ('떨림', '잉크 선', '교차 해칭' 등)")
 
     # ── Check 5: 배경 키워드 ──
-    if not V3_BACKGROUND_KEYWORDS.search(flow_prompt):
+    if not V3_BACKGROUND_KEYWORDS.search(image_prompt):
         add("WARNING", "BACKGROUND_KW_MISSING",
             "배경 키워드 누락 ('순백', '빈 공간' 등)")
 
     # ── Check 6: 한국어 존재 ──
-    if not V3_KOREAN_PATTERN.search(flow_prompt):
+    if not V3_KOREAN_PATTERN.search(image_prompt):
         add("WARNING", "KOREAN_MISSING",
-            "flow_prompt에 한국어 서술 없음 — v3는 순수 한국어 필수")
+            "image_prompt에 한국어 서술 없음 — v3는 순수 한국어 필수")
 
     # ── Check 7: 크기 표현 (has_human) ──
-    if has_human and not V3_SIZE_PERCENT_PATTERN.search(flow_prompt):
+    if has_human and not V3_SIZE_PERCENT_PATTERN.search(image_prompt):
         add("WARNING", "SIZE_TRIPLE_MISSING",
             "크기 수치(N%) 누락 — 크기 3중 표현 필수")
 
     # ── Check 8: 카운트 제약 ──
-    if not V3_COUNT_PATTERN.search(flow_prompt):
+    if not V3_COUNT_PATTERN.search(image_prompt):
         add("WARNING", "COUNT_MISSING",
             "카운트 제약 누락 ('정확히 ~만 그려줘')")
 
     # ── Check 9: 얼굴 규칙 (has_human:main, 실루엣/손만 등장 예외) ──
-    is_silhouette = bool(re.search(r"실루엣", flow_prompt))
-    is_hand_only = bool(re.search(r"손바닥|손\s*스케치", flow_prompt)) and not re.search(r"캐릭터가|캐릭터는", flow_prompt)
-    if is_main and not is_silhouette and not is_hand_only and not V3_FACE_RULE_PATTERN.search(flow_prompt):
+    is_silhouette = bool(re.search(r"실루엣", image_prompt))
+    is_hand_only = bool(re.search(r"손바닥|손\s*스케치", image_prompt)) and not re.search(r"캐릭터가|캐릭터는", image_prompt)
+    if is_main and not is_silhouette and not is_hand_only and not V3_FACE_RULE_PATTERN.search(image_prompt):
         add("WARNING", "FACE_RULE_MISSING",
             "has_human:main인데 얼굴 규칙 누락 ('코 없이', '점 형태의 눈')")
 
     # ── Check 10: 단일 장면 가드 ──
-    if not V3_SINGLE_SCENE_PATTERN.search(flow_prompt):
+    if not V3_SINGLE_SCENE_PATTERN.search(image_prompt):
         add("WARNING", "SINGLE_SCENE_MISSING",
             "단일 장면 가드 누락 ('하나의 장면만' 또는 '한 장을')")
 
     # ── Check 11: 품질 접미사 ──
-    quality_match = QUALITY_SUFFIX_PATTERN.search(flow_prompt)
+    quality_match = QUALITY_SUFFIX_PATTERN.search(image_prompt)
     if quality_match:
         add("ERROR", "QUALITY_SUFFIX",
             f"품질 접미사 사용 금지: '{quality_match.group()}'")
 
     # ── Check 12: Style Isolation 금지어 ──
     for kw in STYLE_ISOLATION_KEYWORDS:
-        if kw.lower() in flow_prompt.lower():
+        if kw.lower() in image_prompt.lower():
             add("WARNING", "STYLE_ISOLATION",
                 f"금지 스타일 표현: '{kw}'")
             break
@@ -305,8 +305,8 @@ def validate_v3_flow_prompt(path: Path, check_emotion: bool = False, strict: boo
 
 # ─── v2 검증 로직 (기존) ──────────────────────────────────────────────────────
 
-def validate_v2_flow_prompt(path: Path, check_emotion: bool = False, strict: bool = False) -> list[dict]:
-    """v2 Shot 파일의 flow_prompt 검증 (기존 로직)."""
+def validate_v2_image_prompt(path: Path, check_emotion: bool = False, strict: bool = False) -> list[dict]:
+    """v2 Shot 파일의 image_prompt 검증 (기존 로직)."""
     issues = []
     try:
         content = path.read_text(encoding="utf-8")
@@ -316,12 +316,12 @@ def validate_v2_flow_prompt(path: Path, check_emotion: bool = False, strict: boo
     def add(level: str, check: str, msg: str):
         issues.append({"level": level, "check": check, "message": msg, "file": str(path)})
 
-    flow_prompt = parse_multiline_field(content, "flow_prompt")
-    if flow_prompt is None:
-        flow_prompt = parse_yaml_field(content, "flow_prompt") or ""
+    image_prompt = parse_multiline_field(content, "image_prompt")
+    if image_prompt is None:
+        image_prompt = parse_yaml_field(content, "image_prompt") or ""
 
-    if not flow_prompt.strip():
-        add("WARNING", "FLOW_PROMPT_EMPTY", "flow_prompt 필드 없음 — 검증 건너뜀")
+    if not image_prompt.strip():
+        add("WARNING", "FLOW_PROMPT_EMPTY", "image_prompt 필드 없음 — 검증 건너뜀")
         return issues
 
     has_human_str = (parse_yaml_field(content, "has_human") or "none").lower()
@@ -334,42 +334,42 @@ def validate_v2_flow_prompt(path: Path, check_emotion: bool = False, strict: boo
     emotion_tag = (parse_yaml_field(content, "emotion_tag") or "").upper()
 
     # Check 1: TASK block
-    if not TASK_PATTERN.search(flow_prompt):
+    if not TASK_PATTERN.search(image_prompt):
         add("ERROR", "TASK_BLOCK_MISSING",
             "TASK block 없음 — 'TASK: Draw a single narrative scene...' 필수")
 
     # Check 1b: [thinking: low/medium] 금지
-    m = THINKING_LOW_PATTERN.search(flow_prompt)
+    m = THINKING_LOW_PATTERN.search(image_prompt)
     if m:
         add("ERROR", "THINKING_LEVEL_INVALID",
             f"'{m.group()}' 사용 불가 — NB2 API는 [thinking: high]만 지원")
 
     # Check 2: [SCENE] block
-    if not SCENE_BLOCK_PATTERN.search(flow_prompt):
+    if not SCENE_BLOCK_PATTERN.search(image_prompt):
         add("ERROR", "SCENE_BLOCK_MISSING",
             "[SCENE] block 없음 — 서술형 포맷 필수")
 
     # Check 3: [MUST] block
-    if not MUST_BLOCK_PATTERN.search(flow_prompt):
+    if not MUST_BLOCK_PATTERN.search(image_prompt):
         add("ERROR", "MUST_BLOCK_MISSING",
             "[MUST] block 없음 — 정밀 제어 항목 필수")
     else:
-        must_match = MUST_BLOCK_PATTERN.search(flow_prompt)
-        must_text = flow_prompt[must_match.end():]
+        must_match = MUST_BLOCK_PATTERN.search(image_prompt)
+        must_text = image_prompt[must_match.end():]
         must_items = MUST_ITEM_PATTERN.findall(must_text)
         if len(must_items) > 5:
             add("ERROR", "MUST_OVER_LIMIT",
                 f"[MUST] 항목 {len(must_items)}개 — 최대 5개 초과")
 
     # Check 4: SOURCE REFERENCES + REDRAW
-    src_ref_match = SOURCE_REF_BLOCK_PATTERN.search(flow_prompt)
+    src_ref_match = SOURCE_REF_BLOCK_PATTERN.search(image_prompt)
     src_ref_section = src_ref_match.group(1) if src_ref_match else ""
     has_char_source = "[CHARACTER SOURCE]" in src_ref_section or "[CHARACTER SOURCE:" in src_ref_section
     has_base_body = "[BASE BODY REFERENCE]" in src_ref_section
     has_obj_source = "[OBJECT SOURCE]" in src_ref_section
     has_any_source = has_char_source or has_base_body or has_obj_source
 
-    if has_any_source and not REDRAW_PATTERN.search(flow_prompt):
+    if has_any_source and not REDRAW_PATTERN.search(image_prompt):
         add("ERROR", "REDRAW_MISSING",
             "REDRAW 항목 없음 — SOURCE REFERENCE 있을 때 [MUST]에 REDRAW 필수")
 
@@ -380,7 +380,7 @@ def validate_v2_flow_prompt(path: Path, check_emotion: bool = False, strict: boo
                 "[CHARACTER SOURCE] + [BASE BODY REFERENCE] 동시 포함 — 상호 배타 위반")
 
     # Check 6: deprecated identifier
-    match = DEPRECATED_ID_PATTERN.search(flow_prompt)
+    match = DEPRECATED_ID_PATTERN.search(image_prompt)
     if match:
         add("ERROR", "DEPRECATED_IDENTIFIER",
             f"deprecated identifier: '{match.group()}' → 'THIS CAPPED' 등 간결 고유명사로 수정")
@@ -391,25 +391,25 @@ def validate_v2_flow_prompt(path: Path, check_emotion: bool = False, strict: boo
             "has_human:main/anonym이지만 SOURCE REFERENCES에 CHARACTER/BASE BODY 없음 → 리얼 사람 생성 위험")
 
     # Check 8: 배경 [MUST]
-    if not BACKGROUND_MUST_PATTERN.search(flow_prompt):
+    if not BACKGROUND_MUST_PATTERN.search(image_prompt):
         add("WARNING", "BACKGROUND_MUST",
             "[MUST]에 배경 bare white canvas 항목 누락")
 
     # Check 9: 스타일 앵커
-    scene_match = SCENE_BLOCK_PATTERN.search(flow_prompt)
-    must_match2 = MUST_BLOCK_PATTERN.search(flow_prompt)
+    scene_match = SCENE_BLOCK_PATTERN.search(image_prompt)
+    must_match2 = MUST_BLOCK_PATTERN.search(image_prompt)
     scene_text = ""
     if scene_match:
         start = scene_match.end()
-        end = must_match2.start() if must_match2 else len(flow_prompt)
-        scene_text = flow_prompt[start:end]
+        end = must_match2.start() if must_match2 else len(image_prompt)
+        scene_text = image_prompt[start:end]
 
     if scene_text and not STYLE_ANCHOR_PATTERN.search(scene_text):
         add("WARNING", "STYLE_ANCHOR",
             "[SCENE] HOW줄에 스타일 앵커 문구 누락 ('Fine trembling ink lines...')")
 
     # Check 10: 얼굴 [MUST]
-    if has_human and not FACE_MUST_PATTERN.search(flow_prompt):
+    if has_human and not FACE_MUST_PATTERN.search(image_prompt):
         add("WARNING", "FACE_MUST_MISSING",
             "has_human:main인데 [MUST]에 얼굴 규칙 누락 (dot eyes + NO nose)")
 
@@ -427,7 +427,7 @@ def validate_v2_flow_prompt(path: Path, check_emotion: bool = False, strict: boo
                 break
 
     # Check 13: 품질 접미사
-    quality_match = QUALITY_SUFFIX_PATTERN.search(flow_prompt)
+    quality_match = QUALITY_SUFFIX_PATTERN.search(image_prompt)
     if quality_match:
         add("ERROR", "QUALITY_SUFFIX",
             f"품질 접미사 사용 금지: '{quality_match.group()}'")
@@ -436,7 +436,7 @@ def validate_v2_flow_prompt(path: Path, check_emotion: bool = False, strict: boo
     if check_emotion and has_human and emotion_tag in EMOTION_EXPRESSION_PATTERNS:
         pattern = EMOTION_EXPRESSION_PATTERNS[emotion_tag]
         if scene_text and not pattern.search(scene_text):
-            if not pattern.search(flow_prompt):
+            if not pattern.search(image_prompt):
                 add("WARNING", "EMOTION_EXPR_MISSING",
                     f"emotion_tag '{emotion_tag}'에 대한 표정 표현이 [SCENE]에 없음")
 
@@ -454,10 +454,10 @@ def validate_v2_flow_prompt(path: Path, check_emotion: bool = False, strict: boo
 
 # ─── 통합 검증 (버전 자동 감지) ──────────────────────────────────────────────
 
-def validate_flow_prompt_file(
+def validate_image_prompt_file(
     path: Path, check_emotion: bool = False, strict: bool = False
 ) -> list[dict]:
-    """단일 Shot 파일의 flow_prompt 검증. 버전 자동 감지."""
+    """단일 Shot 파일의 image_prompt 검증. 버전 자동 감지."""
     try:
         content = path.read_text(encoding="utf-8")
     except Exception as e:
@@ -465,9 +465,9 @@ def validate_flow_prompt_file(
 
     version = detect_prompt_version(content)
     if version == "v3":
-        return validate_v3_flow_prompt(path, check_emotion, strict)
+        return validate_v3_image_prompt(path, check_emotion, strict)
     else:
-        return validate_v2_flow_prompt(path, check_emotion, strict)
+        return validate_v2_image_prompt(path, check_emotion, strict)
 
 
 # ─── 디렉토리 검증 ────────────────────────────────────────────────────────────
@@ -505,13 +505,13 @@ def validate_directory(
                 v2_count += 1
         except Exception:
             pass
-        issues = validate_flow_prompt_file(shot_path, check_emotion, strict)
+        issues = validate_image_prompt_file(shot_path, check_emotion, strict)
         all_issues.extend(issues)
 
     errors = [i for i in all_issues if i["level"] == "ERROR"]
     warnings = [i for i in all_issues if i["level"] == "WARNING"]
 
-    print(f"\n=== flow_prompt 구조 검증 결과 (듀얼 모드: v3={v3_count}, v2={v2_count}) ===")
+    print(f"\n=== image_prompt 구조 검증 결과 (듀얼 모드: v3={v3_count}, v2={v2_count}) ===")
     print(f"대상 경로: {source_dir}")
     print(f"감정 표정 체크: {'ON (07 모드)' if check_emotion else 'OFF (06 모드)'}")
     print(f"총 파일 수: {len(shot_files)}개")
@@ -536,7 +536,7 @@ def validate_directory(
             print(f"  [{rel}] [{issue['check']}] {issue['message']}")
 
     if not all_issues:
-        print("모든 flow_prompt 구조 정상 [OK]")
+        print("모든 image_prompt 구조 정상 [OK]")
 
     if errors or (strict and warnings):
         sys.exit(1)
@@ -565,7 +565,7 @@ def _read_manifest(project_root: Path):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="flow_prompt 내부 구조 자동 검증 (v2/v3 듀얼 모드) — merge_records.py 실행 전 의무 실행"
+        description="image_prompt 내부 구조 자동 검증 (v2/v3 듀얼 모드) — merge_records.py 실행 전 의무 실행"
     )
     parser.add_argument(
         "--source",

@@ -32,7 +32,7 @@ SECTION_ORDER = [
 # QA 체크 항목 정의
 # (id, 한국어 라벨, 영문 카테고리, 수정 대상 파일)
 QA_ITEMS = [
-    ("A", "연출 의도", "INTENT", "05 creative_intent / 06 flow_prompt"),
+    ("A", "연출 의도", "INTENT", "05 creative_intent / 06 image_prompt"),
     ("B", "스타일 일관성", "STYLE", "visual-director art_style"),
     ("C", "배경색", "BG", "visual-director background"),
     ("D", "캐릭터 일관성", "CHARACTER", "ANCHOR Layer 2+4 / costume refs"),
@@ -191,7 +191,7 @@ def generate_sheet(
     # 액션 섹션
     lines.append("### 다음 액션")
     lines.append("")
-    lines.append("- [ ] 개별 shot flow_prompt 수정 → 이미지 재생성")
+    lines.append("- [ ] 개별 shot image_prompt 수정 → 이미지 재생성")
     lines.append("- [ ] 시스템 레벨 수정 (에이전트/스킬)")
     lines.append("- [ ] 전량 재생성")
     lines.append("- [ ] QA 완료 — 편집 진행")

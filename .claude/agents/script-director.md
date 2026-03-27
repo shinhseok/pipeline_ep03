@@ -807,7 +807,7 @@ LLM_POLISH_LOG:
 ## → NEXT STEP INPUT
 INPUT: 03_script_final_{topic}_v1.md
 → STEP 04 shot-composer (claude-opus-4-6)가 이 파일을 읽어:
-  1. FLOW_MODEL 선택 (NB-Pro / NB2) 후 ANCHOR 사전 초안 작성
+  1. IMAGE_MODEL: NB2 후 ANCHOR 사전 초안 작성
   2. 대본 전체 Shot 경계 결정 및 Shot Record (creative_intent, line_of_action 등) 생성
   3. 04_shot_composition/ 디렉토리에 ANCHOR + Section별 Shot Record 파일 저장
 

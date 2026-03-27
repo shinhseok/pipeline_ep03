@@ -9,7 +9,7 @@
 
 ### ANCHOR 역할
 해빛 캐릭터, 인용 인물 변장, 핵심 소품의 텍스트 묘사구를 전역 단일 소스로 정의한다.
-STEP 05 (visual-director)는 이 ANCHOR를 읽어 Flow 프롬프트를 작성한다.
+STEP 05 (visual-director)는 이 ANCHOR를 읽어 Image 프롬프트를 작성한다.
 
 ### REF PATH REGISTRY (필수)
 ANCHOR 파일에 `[REF PATH REGISTRY]` 섹션을 반드시 포함한다. 채널 공통 레퍼런스(style_ref, main_turnaround, character_reference)와 프로젝트별 캐릭터/소품의 실제 파일 경로를 YAML로 정의한다. 모든 하류 에이전트(visual-director)와 스크립트(generate_images.py)는 이 레지스트리에서 경로를 참조한다.
@@ -19,6 +19,7 @@ ref_paths:
   # 채널 공통
   style_ref: assets/reference/style/style_reference.png
   main_turnaround: assets/reference/style/main_turnaround.jpeg
+  happy_rabbit: assets/reference/style/happy_rabbit.jpeg
   character_reference: assets/reference/style/character_reference.jpeg
   style_yaml: assets/reference/style/sempe-ink.yaml
   # 프로젝트별 (Phase 1 생성 후 채움)
@@ -92,7 +93,7 @@ ANCHOR 작성 전에 **웹 검색으로 시각적 고증 리서치를 반드시 
 
 > ⚠️ 단일 포즈(Single-Pose)는 **폐기**. 실험 결과, 턴어라운드 시트가 NB2의 캐릭터/소품 재현 정확도를
 > 크게 향상시키는 것으로 확인됨 (넥커치프→셔츠 오인식 문제 해결, 앞뒤 구분 가능).
-> 씬 이미지에 시트 레이아웃이 재현되는 문제는 flow_prompt에서 장면 묘사로 방지.
+> 씬 이미지에 시트 레이아웃이 재현되는 문제는 image_prompt에서 장면 묘사로 방지.
 
 | 형식 | 뷰 구성 | 사용 조건 |
 |------|---------|-----------|
@@ -182,7 +183,7 @@ Phase 1 생성 대상에서 자동 제외되며, 씬 이미지 생성 시 자동
 ROLE: Global Character Costume & Prop Anchor Dictionary
 INPUT_REF: 03_script_final_{topic}_v1.md
 MODEL: claude-opus-4-6
-FLOW_MODEL: {NB-Pro | NB2}
+IMAGE_MODEL: NB2
 ESTIMATED_DURATION: {N}초
 MIN_SHOTS: {N}개
 CREATED: {날짜}
@@ -206,7 +207,7 @@ ref_images: []
 ref_label: "THIS style — 이 이미지의 드로잉 스타일로 장면 전체를 그려줘:"
 ref_file: assets/reference/style/style_reference.png
 thinking_level: high
-Flow 프롬프트:
+Image 프롬프트:
 ```
 THIS style의 드로잉 스타일로, {소품명}의
 소품 턴어라운드 시트를 그려줘.
@@ -234,7 +235,7 @@ ref_images: []
 ref_label: "THIS main — 이 캐릭터의 체형과 드로잉 스타일을 기반으로 그려줘:"
 ref_file: assets/reference/style/character_reference.jpeg
 thinking_level: high
-Flow 프롬프트:
+Image 프롬프트:
 ```
 THIS main의 드로잉 스타일과 체형을 기반으로,
 {캐릭터 설명} 캐릭터의 턴어라운드 시트를 그려줘.
@@ -263,7 +264,7 @@ ref_images: []
 ref_label: "THIS style — 이 이미지의 드로잉 스타일로 장면 전체를 그려줘:"
 ref_file: assets/reference/style/style_reference.png
 thinking_level: high
-Flow 프롬프트:
+Image 프롬프트:
 ```
 THIS style의 드로잉 스타일로, {캐릭터명}의
 소품 턴어라운드 시트를 그려줘.

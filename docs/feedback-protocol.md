@@ -79,13 +79,13 @@ items:
     field: creative_intent
     symptom: |
       [공간] L3 등급인데 구조물 서술이 "배경 없음"으로만 되어 있음.
-      flow_prompt에서 L3에 맞는 배경 요소를 생성할 근거가 없음.
+      image_prompt에서 L3에 맞는 배경 요소를 생성할 근거가 없음.
     root_cause: |
       shot-composer가 L3 등급을 지정했으나 [공간] 태그에 구조물 힌트를 누락한 것으로 추정.
     suggestion: |
       shot24의 [공간]에 L3에 맞는 구조물 힌트 추가 (예: "공장 내부 기둥과 천장 구조물").
     workaround: |
-      flow_prompt P2에서 emotion_tag(TENSION)과 narration_span 맥락을 참고하여
+      image_prompt P2에서 emotion_tag(TENSION)과 narration_span 맥락을 참고하여
       "어두운 공장 내부의 높은 천장과 굵은 기둥이 희미하게 보이는" 배경을 자체 생성함.
 ---
 ```
@@ -104,7 +104,7 @@ items:
 
 ### 4.1 visual-director → shot-composer
 
-**발생 시점**: STEP 05 실행 중 (각 shot의 flow_prompt 작성 시)
+**발생 시점**: STEP 05 실행 중 (각 shot의 image_prompt 작성 시)
 **검출 대상**:
 
 | ID | 검출 항목 | 심각도 |
@@ -206,13 +206,13 @@ Section Completion Report에만 기록:
 
 ```
 기존:
-  STEP 1. validate_flow_prompt.py
+  STEP 1. validate_image_prompt.py
   STEP 2. validate_shot_records.py
   STEP 3. merge_records.py
 
 변경:
   STEP 0.5. 피드백 수집 + 사용자 보고     ← 신규
-  STEP 1.   validate_flow_prompt.py
+  STEP 1.   validate_image_prompt.py
   STEP 2.   validate_shot_records.py
   STEP 3.   merge_records.py
 ```
@@ -278,7 +278,7 @@ Section Completion Report에만 기록:
 | 수정 대상 | 재실행 범위 | 이유 |
 |----------|-----------|------|
 | shot-composer의 특정 shot 1개 | 해당 shot의 05 + 06 delta만 재생성 | 다른 shot에 영향 없음 |
-| shot-composer의 ANCHOR | 해당 ANCHOR 참조 shot 전체의 05 delta 재생성 | ANCHOR 변경은 flow_prompt에 영향 |
+| shot-composer의 ANCHOR | 해당 ANCHOR 참조 shot 전체의 05 delta 재생성 | ANCHOR 변경은 image_prompt에 영향 |
 | script-director의 특정 섹션 | 해당 섹션의 04 + 05 + 06 전체 재실행 | narration_span 변경은 연쇄 영향 |
 | content-planner | 전체 재실행 (STEP 03부터) | 기획 변경은 전체 영향 |
 

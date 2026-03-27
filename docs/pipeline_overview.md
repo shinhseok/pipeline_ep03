@@ -13,7 +13,7 @@ Google Antigravity IDE 환경에서 Gemini + Claude + 수동 작업을 조합하
 ```
 [MANUAL]         [GEMINI 3.1 PRO]        [CLAUDE]              [MANUAL]
     │                    │                    │                     │
-01_research  →  02_planning  →  03_script  →  04~08_directing  →  09_assets  →  10_edit
+01_research  →  02_planning  →  03_script  →  04~07_directing  →  09_assets  →  10_edit
     │                    │           │              │                     │
 NotebookLM          AI Studio    AI Studio    Antigravity           Kling/Flow
                                                                      CapCut
@@ -27,7 +27,6 @@ NotebookLM          AI Studio    AI Studio    Antigravity           Kling/Flow
 | 05 | Shot 구성 | Claude | claude-opus-4-6 | `05_shot_composition/v1/ANCHOR.md` + `{SECTION}/shot{N}.md` |
 | 06 | 비주얼 디렉팅 | Claude | claude-opus-4-6 | `06_visual_direction/v1/{SECTION}/shot{N}.md` (Shot별 개별 파일) |
 | 07 | Shot Record Build | Claude | claude-haiku-4-5 | `07_shot_records/v1/{SECTION}/shot{N}.md` + `07_ALL.txt` |
-| 08 | 스토리보드 | Gemini | gemini-3.1-flash | `08_storyboard/v1/{SECTION}/shot{N}.md` + `index.md` |
 | 09 | 에셋 생성 | 수동/API (Flow/Gemini) | — | `09_assets/images/`, `09_assets/audio/` |
 | 10 | 편집 | 수동 (CapCut) | — | — |
 
@@ -39,7 +38,7 @@ NotebookLM          AI Studio    AI Studio    Antigravity           Kling/Flow
 |--------|------|-----------|
 | `/start-project` | 프로젝트 폴더 구조 초기화 | 없음 |
 | `/run-planning` | STEP 01~03 자동 실행 | NotebookLM MCP 연결 (실패 시 파일 직접 입력 모드 폴백) |
-| `/run-directing` | STEP 04~08 자동 실행 | `02_planning` 파일 존재 |
+| `/run-directing` | STEP 04~MERGE 자동 실행 | `02_planning` 파일 존재 |
 | `/check-status` | 파이프라인 진행 상태 확인 | `_meta.md` 존재 |
 
 ---
@@ -62,8 +61,7 @@ NotebookLM          AI Studio    AI Studio    Antigravity           Kling/Flow
 │       ├── script-director/SKILL.md   ← Claude Opus: STEP 04
 │       ├── shot-composer/SKILL.md     ← Claude Opus: STEP 05
 │       ├── visual-director/SKILL.md   ← Claude Opus: STEP 06
-│       ├── shot-record-builder/SKILL.md ← Claude Haiku: STEP 07
-│       └── storyboard-generator/SKILL.md ← Gemini Flash: STEP 08
+│       └── shot-record-builder/SKILL.md ← Claude Haiku: STEP 07
 ├── docs/
 │   ├── pipeline_overview.md           ← 이 파일
 │   └── agent_skill_mapping.md         ← 상세 매핑 및 모델 배정
@@ -76,7 +74,6 @@ NotebookLM          AI Studio    AI Studio    Antigravity           Kling/Flow
         ├── 05_shot_composition/
         ├── 06_visual_direction/          ← v1/{SECTION}/shot{N}.md
         ├── 07_shot_records/              ← STEP 07 통합 출력
-        ├── 08_storyboard/
         └── 09_assets/
             ├── images/
             ├── videos/
@@ -105,7 +102,6 @@ NotebookLM          AI Studio    AI Studio    Antigravity           Kling/Flow
 ```
 {단계번호}_{작업명}_{topic}_{버전}.md
 예: 04_script_final_AI기술전망_v1.md
-    08_storyboard_AI기술전망_v2_FINAL.md
     04_script_final/AI기술전망_draft_v1.md
 ```
 

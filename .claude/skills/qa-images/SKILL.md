@@ -58,7 +58,7 @@ Shot 수: {N}개 | 체크 항목: 9개
 
 | ID | 항목 | 카테고리 | 확인 내용 | 실패 시 수정 대상 |
 |---|------|---------|---------|----------------|
-| A | 연출 의도 | `INTENT` | creative_intent에 기술된 장면이 표현되었는가 | 05 creative_intent / 06 flow_prompt |
+| A | 연출 의도 | `INTENT` | creative_intent에 기술된 장면이 표현되었는가 | 05 creative_intent / 06 image_prompt |
 | B | 스타일 일관성 | `STYLE` | Sempé 잉크 스타일 유지, 포토리얼/3D 이탈 없음 | visual-director art_style |
 | C | 배경색 | `BG` | 순백 배경, 색 번짐 없음 | visual-director background 고정값 |
 | D | 캐릭터 일관성 | `CHARACTER` | 체형·의상·색상이 ANCHOR/레퍼런스와 일치 | ANCHOR Layer 2+4 / costume refs |
@@ -122,7 +122,7 @@ Claude는 이 단계에서 대기하며 "기입 완료" 신호를 기다린다.
    ```
 4. 재병합:
    ```bash
-   python $RD/merge_records.py --project {PROJECT_CODE} --render
+   python $RD/merge_records.py --project {PROJECT_CODE}
    ```
 
 ---

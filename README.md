@@ -70,9 +70,6 @@
 [Script] MERGE   merge_records.py   → 07_shot_records/{RUN_ID}/
          │
          ▼
-[Script] RENDER  render_storyboard  → 08_storyboard/{RUN_ID}/
-         │
-         ▼
 [수동]   STEP 08  이미지/영상 생성 + CapCut 편집
 ```
 
@@ -88,14 +85,14 @@
 | **content-planner** | `.claude/agents/content-planner.md` | `sonnet` | STEP 02 | 리서치 → 10섹션 기획서 (핵심 메시지+앵커링+비주얼 전략) | Read, Write, Glob, Grep |
 | **script-director** | `.claude/agents/script-director.md` | `opus` | STEP 03 | 기획서 → 해빛 대본 + Fact Check + LLM 폴리싱 | Read, Write, Glob, Grep |
 | **shot-composer** | `.claude/agents/shot-composer.md` | `opus` | STEP 04 | 대본 → Shot 분해 + 창의적 연출 결정 | Read, Write, Glob, Grep |
-| **visual-director** | `.claude/agents/visual-director.md` | `opus` | STEP 05 | creative_intent → 창의적 장면 연출 + flow_prompt 작성 | Read, Write, Glob, Grep |
+| **visual-director** | `.claude/agents/visual-director.md` | `opus` | STEP 05 | creative_intent → 창의적 장면 연출 + image_prompt 작성 | Read, Write, Glob, Grep |
 | **audio-director** | `.claude/agents/audio-director.md` | `haiku` | STEP 06 | emotion_tag → ElevenLabs 나레이션 태그 + BGM | Read, Write, Glob, Grep |
 
 ### 3.2 QA / 감시 에이전트
 
 | 에이전트 | 파일 | 모델 | 역할 | 호출 방식 |
 |----------|------|------|------|-----------|
-| **prompt-auditor** | `.claude/agents/prompt-auditor.md` | `sonnet` | STEP 05 flow_prompt 품질 검증 (A~D 체크리스트) | 수동 ("prompt-auditor로 검토해줘") |
+| **prompt-auditor** | `.claude/agents/prompt-auditor.md` | `sonnet` | STEP 05 image_prompt 품질 검증 (A~D 체크리스트) | 수동 ("prompt-auditor로 검토해줘") |
 | **pipeline-monitor** | `.claude/agents/pipeline-monitor.md` | `haiku` | 파이프라인 건강 검진 (누락/불일치 탐지) | 수동 (PRE_WORK / POST_WORK / FULL) |
 
 ### 3.3 절대 금지 경계
@@ -105,7 +102,7 @@
 | content-planner | 기획서 작성 | STEP 03 이후 대본 작성 |
 | script-director | 대본 작성 | 창의적 Shot 구성 결정 |
 | shot-composer | Shot 분해, creative_intent | 프롬프트 엔지니어링, 나레이션 태깅 |
-| visual-director | 창의적 장면 연출 + flow_prompt 작성 | ANCHOR 신규 생성 |
+| visual-director | 창의적 장면 연출 + image_prompt 작성 | ANCHOR 신규 생성 |
 | audio-director | 매트릭스 기반 태깅 | 창의적 결정 (태깅만 수행) |
 
 ---
@@ -134,10 +131,9 @@ LLM 호출 없이 Python으로 실행되는 자동화 스크립트:
 
 | 스크립트 | 위치 | 역할 | 실행 시점 |
 |----------|------|------|-----------|
-| `validate_flow_prompt.py` | `.claude/skills/run-directing/scripts/` | NB2 JSON 구조 검증 | MERGE 전 (의무) |
+| `validate_image_prompt.py` | `.claude/skills/run-directing/scripts/` | NB2 JSON 구조 검증 | MERGE 전 (의무) |
 | `validate_shot_records.py` | 상동 | STEP 04 base 필드 완성도 검사 | STEP 05+06 전 |
 | `merge_records.py` | 상동 | 04 base + 05 delta + 06 delta → 완성 Shot Record | MERGE 단계 |
-| `render_storyboard.py` | 상동 | Shot Record → 마크다운 스토리보드 렌더링 | RENDER 단계 |
 | `generate_images.py` | `.claude/skills/generate-images/scripts/` | NB2 API 이미지 생성 | STEP 08 |
 | `generate_videos.py` | `.claude/skills/generate-videos/scripts/` | Veo 3 I2V 영상 생성 | STEP 08 |
 
@@ -145,7 +141,6 @@ LLM 호출 없이 Python으로 실행되는 자동화 스크립트:
 ```bash
 RD=".claude/skills/run-directing/scripts"
 python $RD/merge_records.py --project CH02
-python $RD/render_storyboard.py --project CH02
 ```
 
 ---
@@ -179,8 +174,8 @@ python $RD/render_storyboard.py --project CH02
 
 ### STEP 05 — 비주얼 (visual-director, Opus) [서브에이전트]
 - **입력**: `04_shot_composition/{RUN_ID}/` (ANCHOR + Shot files)
-- **출력**: `05_visual_direction/{RUN_ID}/` (delta: ref_images + flow_prompt + iv_prompt + has_human + asset_path)
-- creative_intent → 창의적 장면 연출 + NB2 flow_prompt 작성
+- **출력**: `05_visual_direction/{RUN_ID}/` (delta: ref_images + image_prompt + iv_prompt + has_human + asset_path)
+- creative_intent → 창의적 장면 연출 + NB2 image_prompt 작성
 
 ### STEP 06 — 오디오 (audio-director, Haiku) [서브에이전트]
 - **입력**: `04_shot_composition/{RUN_ID}/` (Shot files)
@@ -191,9 +186,6 @@ python $RD/render_storyboard.py --project CH02
 
 ### MERGE — 병합 (merge_records.py)
 - 04 base + 05 delta + 06 delta → `07_shot_records/{RUN_ID}/` + `07_ALL.txt`
-
-### RENDER — 스토리보드 (render_storyboard.py)
-- Shot Record → `08_storyboard/{RUN_ID}/` 마크다운 렌더링 (LLM 미사용)
 
 ### STEP 08 — 에셋 생성 (수동 + 스크립트)
 - Phase 1: Canonical Shot (ANCHOR 레퍼런스)
@@ -212,7 +204,7 @@ python $RD/render_storyboard.py --project CH02
 | STEP 02~04 | **수동** (`/model claude-opus-4-6`) | 사용자/오케스트레이터가 세션에서 수동 전환 |
 | STEP 05 | **자동** (에이전트 frontmatter) | `visual-director.md`의 `model: opus` 선언에 의해 서브에이전트 생성 시 자동 적용 |
 | STEP 06 | **자동** (에이전트 frontmatter) | `audio-director.md`의 `model: haiku` 선언에 의해 서브에이전트 생성 시 자동 적용 |
-| MERGE/RENDER | **해당 없음** | Python 스크립트 — LLM 미사용 |
+| MERGE | **해당 없음** | Python 스크립트 — LLM 미사용 |
 
 ### 7.2 에이전트 frontmatter 모델 선언 (검증 완료)
 
@@ -294,17 +286,13 @@ projects/{PROJECT_CODE}/
         ├── SECTION03/shot{N}.md ...
         └── SECTION04_OUTRO/shot{N}.md
   05_visual_direction/
-    └── {RUN_ID}/{SECTION}/shot{N}.md      ← delta (ref_images + flow_prompt + iv_prompt + has_human)
+    └── {RUN_ID}/{SECTION}/shot{N}.md      ← delta (ref_images + image_prompt + iv_prompt + has_human)
   06_audio_narration/
     └── {RUN_ID}/{SECTION}/shot{N}.md      ← delta (el_narration + bgm)
   07_shot_records/
     └── {RUN_ID}/
         ├── {SECTION}/shot{N}.md           ← 병합 완성본
         └── 07_ALL.txt                     ← ElevenLabs 통합본
-  08_storyboard/
-    └── {RUN_ID}/
-        ├── {SECTION}/shot{N}.md           ← 렌더링된 스토리보드
-        └── index.md
   09_assets/
     ├── images/{RUN_ID}/shot{N}.png        ← 씬 이미지
     ├── videos/                            ← I2V 영상
@@ -337,7 +325,7 @@ projects/{PROJECT_CODE}/
 | `has_human` | 04→05 | enum | main/anonym/none. 05에서 최종 확정 |
 | `ref_images` | **STEP 05** | list | 참조 이미지 경로 배열 (v3) |
 | `thinking_level` | **STEP 05** | enum | high (기본) / low (v3) |
-| `flow_prompt` | **STEP 05** | text | v3: 순수 한국어 서술형 / v2: [SCENE]+[MUST] |
+| `image_prompt` | **STEP 05** | text | v3: 순수 한국어 서술형 / v2: [SCENE]+[MUST] |
 | `iv_prompt` | **STEP 05** | text | Veo 3 I2V 모션 프롬프트 |
 | `scene_id` | **STEP 06** | int | 나레이션 Scene 그룹 |
 | `el_narration` | **STEP 06** | text | ElevenLabs Audio Tag 포함 |
@@ -370,7 +358,7 @@ projects/{PROJECT_CODE}/
 | STEP 02~04 (Opus) | 수동 `/model` 전환 | PASS | 오케스트레이터가 Opus 세션에서 실행 |
 | STEP 05 (Opus) | 서브에이전트 frontmatter | PASS | `model: opus` 선언 → 자동 적용 |
 | STEP 06 (Haiku) | 서브에이전트 frontmatter | PASS | `model: haiku` 선언 → 자동 적용 |
-| MERGE/RENDER | Python 스크립트 | PASS | LLM 미사용 — 모델 전환 불필요 |
+| MERGE | Python 스크립트 | PASS | LLM 미사용 — 모델 전환 불필요 |
 
 ### 11.3 아키텍처 정합성 — **이상 없음**
 
@@ -388,7 +376,7 @@ projects/{PROJECT_CODE}/
 고비용     Opus x3회    STEP 03, 04, 05          (대본 + Shot 구성 + 비주얼 연출)
 중비용     Sonnet x2회  STEP 02, 오케스트레이터   (기획 + 파이프라인 조율)
 저비용     Haiku x1회   STEP 06                   (오디오 태깅)
-무료       Script x2회  MERGE + RENDER            (Python 스크립트)
+무료       Script x1회  MERGE                      (Python 스크립트)
 ```
 
 > Opus는 창의적 결정이 필수인 대본/Shot 구성/비주얼 연출에 집중 투입.

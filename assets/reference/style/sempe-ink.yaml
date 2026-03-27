@@ -10,7 +10,7 @@ description: >
   Whimsical and heartwarming. 넉넉한 여백, lavender/peach 파스텔 워시.
 
 # ═══════════════════════════════════════════════════════
-# A. 씬 이미지용 (flow_prompt — STEP 06)
+# A. 씬 이미지용 (image_prompt — STEP 06)
 # ═══════════════════════════════════════════════════════
 
 # ── A1. SCENE [HOW] 스타일 앵커 문구 (4번째 줄 고정 삽입) ──
@@ -139,7 +139,7 @@ prohibited_everywhere:
   - "스타일 표현의 [SCENE] 내 과도한 반복 (style_anchor 1회 삽입으로 충분)"
   - "캐릭터 몸체 전체에 lavender/peach 워시 적용"
 
-# 금지 키워드 (flow_prompt [SCENE] 내에서 과잉 스타일링 방지)
+# 금지 키워드 (image_prompt [SCENE] 내에서 과잉 스타일링 방지)
 style_isolation_banned_in_scene:
   - "charcoal fill"
   - "solid fill"
@@ -152,7 +152,7 @@ style_isolation_banned_in_scene:
   - "heavy pencil"
 
 # ═══════════════════════════════════════════════════════
-# E. v3 한국어 서술형 빌딩 블록 (flow_prompt v3)
+# E. v3 한국어 서술형 빌딩 블록 (image_prompt v3)
 # ═══════════════════════════════════════════════════════
 
 # ── E1. 과제 소개 (P1 단락 — 모든 Shot 공통) ──
@@ -462,7 +462,7 @@ v3_bean_gesture_vocabulary:
 # ── E13. 선 품질 빌딩 블록 (v3_line_character) ──
 # 스틸 시퀀스에서 선의 성격 변화가 서사를 전달한다.
 # shot-composer가 creative_intent에 선 품질을 지정하면
-# visual-director가 flow_prompt P2에 해당 서술을 통합한다.
+# visual-director가 image_prompt P2에 해당 서술을 통합한다.
 v3_line_character:
   tremor:
     label: "떨림 (수공예)"

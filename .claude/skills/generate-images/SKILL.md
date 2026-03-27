@@ -1,6 +1,6 @@
 ---
 name: generate-images
-description: "Generate images via NB2 API. Phase 1 = ANCHOR reference images; Phase 2 = scene images from flow_prompt. Run /generate-images."
+description: "Generate images via NB2 API. Phase 1 = ANCHOR reference images; Phase 2 = scene images from image_prompt. Run /generate-images."
 disable-model-invocation: true
 allowed-tools: Bash(python *)
 ---
@@ -27,8 +27,8 @@ allowed-tools: Bash(python *)
 python ${CLAUDE_SKILL_DIR}/scripts/generate_images.py --phase 0 --project {PROJECT_CODE}
 ```
 - `hook_media_type: video`인 SECTION00_HOOK Shot만 대상
-- `flow_prompt[start]` → `shot{N}_start.png` 생성
-- `flow_prompt[end]` (null이 아닌 경우) → `shot{N}_end.png` 생성
+- `image_prompt[start]` → `shot{N}_start.png` 생성
+- `image_prompt[end]` (null이 아닌 경우) → `shot{N}_end.png` 생성
 - 저장: `09_assets/images/{RUN_ID}/shot{N}_start.png`, `shot{N}_end.png`
 - **Phase 1보다 먼저 실행** — Video Hook 이미지가 영상 생성의 입력
 
@@ -49,7 +49,7 @@ python ${CLAUDE_SKILL_DIR}/scripts/generate_images.py --project {PROJECT_CODE} -
 # 전체 재생성 (기존 덮어쓰기)
 python ${CLAUDE_SKILL_DIR}/scripts/generate_images.py --project {PROJECT_CODE} --section SECTION01 --overwrite
 ```
-- `05_visual_direction/{RUN_ID}/{SECTION}/` flow_prompt 기반 이미지 생성
+- `05_visual_direction/{RUN_ID}/{SECTION}/` image_prompt 기반 이미지 생성
 - 저장: `09_assets/images/{RUN_ID}/shot{N}.png`
 
 ---

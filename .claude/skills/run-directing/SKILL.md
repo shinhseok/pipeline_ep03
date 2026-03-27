@@ -1,13 +1,13 @@
 ---
 name: run-directing
-description: STEP 03~08 Claude 담당 구간 연속 실행 워크플로우. 대본 최종본(STEP 03) → Shot 구성(STEP 04) → 서브에이전트 병렬 실행(STEP 05+07) → 병합·렌더링. /run-directing 으로 실행.
+description: STEP 03~MERGE Claude 담당 구간 연속 실행 워크플로우. 대본 최종본(STEP 03) → Shot 구성(STEP 04) → 서브에이전트 병렬 실행(STEP 05+07) → 병합. /run-directing 으로 실행.
 disable-model-invocation: true
 allowed-tools: Bash(python *)
 ---
 
 # Workflow: run-directing
 ## 트리거: /run-directing
-## 목적: STEP 03~08 Claude 담당 구간 연속 실행 (Shot Record 중심 파이프라인)
+## 목적: STEP 03~MERGE Claude 담당 구간 연속 실행 (Shot Record 중심 파이프라인)
 ## 선행 조건: `02_planning_{topic}_v1.md` 존재 확인
 
 ---
@@ -57,8 +57,8 @@ STEP 04 시작 전 Plan Mode(`/plan`)로 전체 Shot 구성 전략을 먼저 수
 
 3. [STEP 04] `shot-composer` 에이전트 위임 / 모델: `claude-opus-4-6`
    - INPUT: `03_script_final/{topic}_v1.md`
-   - **시작 전 FLOW_MODEL 선택**: NB-Pro vs NB2 1회 선택 → ANCHOR 헤더 `FLOW_MODEL:` 기록
-   - OUTPUT: ANCHOR.md + Section별 Shot base 파일 (flow_prompt·el_narration placeholder 없음)
+   - ANCHOR 헤더 `IMAGE_MODEL: NB2` 기록
+   - OUTPUT: ANCHOR.md + Section별 Shot base 파일 (image_prompt·el_narration placeholder 없음)
    - SAVE: `projects/{PROJECT_CODE}/04_shot_composition/{RUN_ID}/`
    - 완료 후: `/version-manager` 스킬로 `bump 04_shot_composition` 수행
 
@@ -116,25 +116,24 @@ STEP 04 시작 전 Plan Mode(`/plan`)로 전체 Shot 구성 전략을 먼저 수
    ```
    ✋ [STEP 05+07 + Phase 1 검토 요청]
    파일:
-     05_visual_direction/{RUN_ID}/{SECTION}/shot{N}.md      ← delta (flow_prompt + has_human) [QA 완료]
+     05_visual_direction/{RUN_ID}/{SECTION}/shot{N}.md      ← delta (image_prompt + has_human) [QA 완료]
      06_audio_narration/{RUN_ID}/{SECTION}/shot{N}.md       ← delta (el_narration + audio)
      09_assets/reference/                                    ← Phase 1 ANCHOR 이미지
    수정이 필요하면 말씀해 주세요. 진행하려면 "승인" 입력.
    ```
 
-5. [MERGE + RENDER] 통합 스크립트 실행
+5. [MERGE] 병합 스크립트 실행
    ```bash
-   python ${CLAUDE_SKILL_DIR}/scripts/merge_records.py --project {PROJECT_CODE} --render
+   python ${CLAUDE_SKILL_DIR}/scripts/merge_records.py --project {PROJECT_CODE}
    ```
    - **MERGE**: 04 base + 05 delta + 06 delta → `07_shot_records/{RUN_ID}/` + `07_ALL.txt`
-   - **RENDER**: 자동 체이닝 → `08_storyboard/{RUN_ID}/` 마크다운 렌더링 (LLM 불필요)
-   - 매니페스트 모드: 자동 bump (07_shot_records + 08_storyboard)
+   - 매니페스트 모드: 자동 bump (07_shot_records)
 
 8. `_meta.md` 업데이트:
-   - STEP 03~08 PIPELINE STATUS → ✅ DONE
+   - STEP 03~MERGE PIPELINE STATUS → ✅ DONE
    - FILE REGISTRY: 생성된 모든 파일명·버전 기록
    - SECTION VERSION TRACKER: 모든 버전 셀 채우기
-   - SHOT MAPPING TABLE: 08_storyboard_index의 매핑 테이블 복사
+   - SHOT MAPPING TABLE: 07_shot_records의 매핑 테이블 복사
 
 ---
 
@@ -146,10 +145,9 @@ STEP 04 시작 전 Plan Mode(`/plan`)로 전체 Shot 구성 전략을 먼저 수
 생성 파일:
   03_script_final/{topic}_v1.md                          [Opus]
   04_shot_composition/{RUN_ID}/ (ANCHOR + Shot base)     [Opus]
-  05_visual_direction/{RUN_ID}/ (delta: flow_prompt)     [Sonnet]
+  05_visual_direction/{RUN_ID}/ (delta: image_prompt)     [Sonnet]
   06_audio_narration/{RUN_ID}/ (delta: el_narration)     [Haiku]
   07_shot_records/{RUN_ID}/ + 07_ALL.txt                 [merge script]
-  08_storyboard/{RUN_ID}/ + index.md                     [render script]
 
 다음 작업:
   1. ElevenLabs → 07_ALL 파일 → 나레이션 생성

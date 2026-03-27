@@ -20,7 +20,7 @@ disable-model-invocation: true
    - 현재 완료된 단계 및 보유 파일 목록
 
 2. 아래 폴더 구조를 생성한다:
-   `projects/{PROJECT_CODE}/` 하위: `_meta.md`, `01_research/`, `02_planning/`, `03_script_final/`, `04_shot_composition/`, `05_visual_direction/`, `06_audio_narration/`, `07_shot_records/`, `08_storyboard/`, `09_assets/{images,videos,audio,reference}/`
+   `projects/{PROJECT_CODE}/` 하위: `_meta.md`, `01_research/`, `02_planning/`, `03_script_final/`, `04_shot_composition/`, `05_visual_direction/`, `06_audio_narration/`, `07_shot_records/`, `09_assets/{images,videos,audio,reference}/`
 
    > 상세 구조: `pipeline_reference.md §4` 참조.
    > ⚠️ `assets/reference/style/character_reference.jpeg` (프로젝트 상위) 없으면 STEP 05 전 생성 필요.

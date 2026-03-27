@@ -60,7 +60,7 @@ def parse_yaml_fields(content: str) -> dict:
             i += 1
             continue
 
-        # 필드: 값 매칭 (브라켓 태그 지원: flow_prompt[start], flow_prompt[end] 등)
+        # 필드: 값 매칭 (브라켓 태그 지원: image_prompt[start], image_prompt[end] 등)
         m = re.match(r"^([a-zA-Z_]+(?:\[\w+\])?):\s*(.*)", line)
         if m:
             key = m.group(1)
@@ -143,7 +143,7 @@ BASE_FIELDS = [
 ]
 
 # STEP 05 delta 필드
-DELTA_06_FIELDS = ["flow_prompt", "iv_prompt", "has_human", "asset_path", "video_prompt",
+DELTA_06_FIELDS = ["image_prompt", "iv_prompt", "has_human", "asset_path", "video_prompt",
                    "ref_images", "thinking_level"]
 
 # STEP 06 audio delta 필드 (sfx 제거 — Veo 3 iv_prompt [AUDIO]에서 영상에 직접 생성)
@@ -157,19 +157,19 @@ def merge_shot(base_fields: dict, delta06_fields: dict | None, delta07_fields: d
     """04 base + 05 delta + 06 delta → 완성 Shot Record 딕셔너리."""
     merged = dict(base_fields)
 
-    # 05 delta: has_human + asset_path 덮어쓰기, flow_prompt + iv_prompt + video_prompt 추가
+    # 05 delta: has_human + asset_path 덮어쓰기, image_prompt + iv_prompt + video_prompt 추가
     if delta06_fields:
         if "has_human" in delta06_fields:
             merged["has_human"] = delta06_fields["has_human"]
         if "asset_path" in delta06_fields:
             merged["asset_path"] = delta06_fields["asset_path"]
-        # flow_prompt: 단일 또는 flow_prompt[start]/[end] 브라켓 형식 처리
-        if "flow_prompt" in delta06_fields:
-            merged["flow_prompt"] = delta06_fields["flow_prompt"]
-        elif "flow_prompt[start]" in delta06_fields:
-            # Video Hook: flow_prompt[start] + flow_prompt[end] → 개별 필드로 병합
-            merged["flow_prompt[start]"] = delta06_fields["flow_prompt[start]"]
-            merged["flow_prompt[end]"] = delta06_fields.get("flow_prompt[end]", "~")
+        # image_prompt: 단일 또는 image_prompt[start]/[end] 브라켓 형식 처리
+        if "image_prompt" in delta06_fields:
+            merged["image_prompt"] = delta06_fields["image_prompt"]
+        elif "image_prompt[start]" in delta06_fields:
+            # Video Hook: image_prompt[start] + image_prompt[end] → 개별 필드로 병합
+            merged["image_prompt[start]"] = delta06_fields["image_prompt[start]"]
+            merged["image_prompt[end]"] = delta06_fields.get("image_prompt[end]", "~")
         if "iv_prompt" in delta06_fields:
             merged["iv_prompt"] = delta06_fields["iv_prompt"]
         if "video_prompt" in delta06_fields:
@@ -200,11 +200,11 @@ def merge_shot(base_fields: dict, delta06_fields: dict | None, delta07_fields: d
     is_song_hook = merged.get("hook_type") == "song"
     is_video_hook = merged.get("hook_media_type") == "video"
     if is_song_hook:
-        # Video Hook: flow_prompt[start] 대체 가능
-        fp_key = "flow_prompt[start]" if is_video_hook and "flow_prompt[start]" in merged else "flow_prompt"
+        # Video Hook: image_prompt[start] 대체 가능
+        fp_key = "image_prompt[start]" if is_video_hook and "image_prompt[start]" in merged else "image_prompt"
         required = [fp_key, "iv_prompt", "suno_style", "suno_lyrics"]
     else:
-        required = ["flow_prompt", "iv_prompt", "el_narration", "bgm", "volume_mix"]
+        required = ["image_prompt", "iv_prompt", "el_narration", "bgm", "volume_mix"]
     all_present = all(
         merged.get(k) and merged[k] not in ("~", "null", "None", "")
         for k in required
@@ -304,12 +304,12 @@ CREATED: {date_str}
             yaml_lines.append(format_yaml_value("ref_images", ref_val))
     if merged.get("thinking_level"):
         yaml_lines.append(format_yaml_value("thinking_level", merged["thinking_level"]))
-    # Video Hook: flow_prompt[start] + flow_prompt[end] 또는 단일 flow_prompt
-    if "flow_prompt[start]" in merged:
-        yaml_lines.append(format_yaml_value("flow_prompt[start]", merged["flow_prompt[start]"]))
-        yaml_lines.append(format_yaml_value("flow_prompt[end]", merged.get("flow_prompt[end]", "~")))
+    # Video Hook: image_prompt[start] + image_prompt[end] 또는 단일 image_prompt
+    if "image_prompt[start]" in merged:
+        yaml_lines.append(format_yaml_value("image_prompt[start]", merged["image_prompt[start]"]))
+        yaml_lines.append(format_yaml_value("image_prompt[end]", merged.get("image_prompt[end]", "~")))
     else:
-        yaml_lines.append(format_yaml_value("flow_prompt", merged.get("flow_prompt", "~")))
+        yaml_lines.append(format_yaml_value("image_prompt", merged.get("image_prompt", "~")))
     yaml_lines.append(format_yaml_value("iv_prompt", merged.get("iv_prompt", "~")))
     if merged.get("video_prompt"):
         yaml_lines.append(format_yaml_value("video_prompt", merged["video_prompt"]))
@@ -444,7 +444,6 @@ def main():
     parser.add_argument("--section", default=None, help="특정 Section만 병합 (예: SECTION01)")
     parser.add_argument("--version", default=None, help="버전 (레거시: v1 등. 생략 시 매니페스트 자동)")
     parser.add_argument("--dry-run", action="store_true", help="파일 쓰기 없이 병합 결과만 출력")
-    parser.add_argument("--render", action="store_true", help="병합 완료 후 render_storyboard.py 자동 실행")
     args = parser.parse_args()
 
     project_root = WORKSPACE_ROOT / "projects" / args.project
@@ -577,20 +576,6 @@ def main():
     pending_count = len(all_merged) - done_count
     print(f"\n   상태: done={done_count} / pending={pending_count}")
 
-    # --render: 병합 완료 후 render_storyboard.py 자동 실행
-    if args.render and not args.dry_run:
-        import subprocess
-        render_script = SCRIPT_DIR / "render_storyboard.py"
-        render_cmd = [sys.executable, str(render_script), "--project", args.project]
-        if args.version:
-            render_cmd.extend(["--version", args.version])
-        print(f"\n{'='*60}")
-        print(f"   🎬 render_storyboard.py 자동 실행 (--render)")
-        print(f"{'='*60}")
-        result = subprocess.run(render_cmd)
-        if result.returncode != 0:
-            print(f"\n   [ERROR] render_storyboard.py 실패 (exit code: {result.returncode})")
-            sys.exit(result.returncode)
 
 
 if __name__ == "__main__":

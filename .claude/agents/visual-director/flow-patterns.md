@@ -1,8 +1,8 @@
-# Flow Prompt v3 패턴 — Visual Director Reference (has_human 3값 기반)
+# Image Prompt v3 패턴 — Visual Director Reference (has_human 3값 기반)
 
 > v3 간소화: 구조적 태그 + 불필요 요소(스타일 묘사, 얼굴 규칙, REDRAW, 카운트, 장면 가드) 제거.
 > 순수 한국어 서술형 4단락 구조 + THIS {name} 직접 참조.
-> style_ref + 턴어라운드 시트가 외형/스타일을 담당 → flow_prompt는 구도/감정/채색만.
+> style_ref + 턴어라운드 시트가 외형/스타일을 담당 → image_prompt는 구도/감정/채색만.
 
 ---
 
@@ -37,7 +37,7 @@ has_human ──┬── main ──┬── secondary_chars 있음 → 다중
 
 ## ref_images + THIS {name} 규칙
 
-flow_prompt에서 **THIS {name}**으로 참조 (서수 참조 폐기).
+image_prompt에서 **THIS {name}**으로 참조 (서수 참조 폐기).
 `{name}`은 ref_images 배열의 파일명 stem.
 
 **우선순위 배치:**
@@ -56,7 +56,7 @@ flow_prompt에서 **THIS {name}**으로 참조 (서수 참조 폐기).
 > visual-director가 ref_images를 완전히 구성한다. style_ref, main_turnaround, character_reference 등
 > 모든 참조를 명시적으로 포함해야 한다. generate_images.py는 추가/제거 없이 그대로 전달한다.
 > **최대 5개 권장 (style_ref 포함)** — 이미지가 많으면 NB2 해석이 분산됨.
-> ref 3개 이상 시 flow_prompt P1에 스타일 전이 방지 문구 포함:
+> ref 3개 이상 시 image_prompt P1에 스타일 전이 방지 문구 포함:
 > "여러 참조 이미지가 첨부되어 있어. 모든 요소에 동일한 THIS style의 드로잉 스타일을 유지해줘."
 
 **경로**: `09_assets/reference/` 기준 상대 경로 (접두사 금지).
@@ -121,7 +121,7 @@ v3에서는 제약 사항을 서술문에 자연스럽게 통합한다. 별도 [
 캐릭터 {공간관계}에는 THIS {소품명}이 {크기 묘사} 놓여 있어.
 {소품 배치/디테일 묘사}.
 
-[P4] 반드시 {채색 대상}에만 {색상} 워시를 입혀줘 — 유일한 색이야.
+[P4] 반드시 {장면 대상}에만 {색상} 워시를 입혀줘 — 캐릭터는 참조 이미지의 색을 그대로 유지해줘.
   반듯한 선이 아닌, 떨리는 손그림 느낌의 잉크 선으로 그려줘. 선이 살짝 흔들리고, 완벽하지 않은 스케치의 따뜻함이 느껴지게.
 ```
 
@@ -159,7 +159,7 @@ v3에서는 제약 사항을 서술문에 자연스럽게 통합한다. 별도 [
 약 {N}%, {A와의 크기 비교}로 {포즈 묘사}.
 {소품/환경 묘사 — 두 캐릭터 사이의 공간 관계 포함}
 
-[P4] 반드시 {채색 대상}에만 {색상} 워시를 입혀줘 — 유일한 색이야.
+[P4] 반드시 {장면 대상}에만 {색상} 워시를 입혀줘 — 캐릭터는 참조 이미지의 색을 그대로 유지해줘.
   반듯한 선이 아닌, 떨리는 손그림 느낌의 잉크 선으로 그려줘. 선이 살짝 흔들리고, 완벽하지 않은 스케치의 따뜻함이 느껴지게.
 ```
 
@@ -172,7 +172,7 @@ v3에서는 제약 사항을 서술문에 자연스럽게 통합한다. 별도 [
 **ref_images**: [character_reference.jpeg, prop_ref(있으면)]
 - `assets/reference/style/character_reference.jpeg`는 기본 콩 캐릭터 형태 참조 (얼굴·의상 디테일 없이 실루엣용)
 
-**flow_prompt 특징**:
+**image_prompt 특징**:
 - P3에서 `THIS character_reference`로 기본 형태 참조
 - 얼굴/의상 디테일 없이 실루엣·그림자·손 등 신체 일부만 묘사
 - "어두운 잉크로 채워진 콩 캐릭터 실루엣" 패턴 사용
@@ -292,7 +292,7 @@ THIS spinning_wheel의 4분의 1 크기로, 마치 장난감에 짓눌린 아이
 캐릭터 오른편에는 THIS spinning_wheel이 캐릭터의 3배 높이로
 우뚝 솟아 있어, 캐릭터를 압도하듯.                         ← prop_relation: 3배+
 
-[P4] 반드시 물레의 손잡이에만 warm peach 워시를 입혀줘 — 유일한 색이야.
+[P4] 반드시 물레의 손잡이에만 warm peach 워시를 입혀줘 — 캐릭터는 참조 이미지의 색을 그대로 유지해줘.
 ```
 
 ### pressure (TENSION) 응집 예시

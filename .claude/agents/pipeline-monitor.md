@@ -60,11 +60,11 @@ STEP 3. 필수 필드 검사
    (캐릭터 등장 키워드 있는데 none, 신체 키워드 있는데 none 등)
 → STEP 04 Hook Shot: hook_media_type: video일 때 video_duration, video_engine 존재 확인
 → STEP 04 Hook Shot: hook_type: song일 때 hook_type 필드 존재 확인
-→ STEP 05 파일: flow_prompt, iv_prompt, has_human 존재 여부
+→ STEP 05 파일: image_prompt, iv_prompt, has_human 존재 여부
 → STEP 05 교차 검증: has_human: main인데 ref_images에 캐릭터 ref 없으면 CRITICAL
    (costume_refs: [] → main_turnaround, [변장명] → characters/ 경로 필수)
 → STEP 05 교차 검증: ref_images에 style_reference.png 미포함 시 WARNING
-→ STEP 05 Video Hook Shot: flow_prompt[start], video_prompt 존재 확인
+→ STEP 05 Video Hook Shot: image_prompt[start], video_prompt 존재 확인
 → STEP 06 audio 파일: scene_id, el_narration, bgm, volume_mix 존재 여부
 → STEP 06 Song Hook Shot: suno_style, suno_lyrics, suno_params 존재 확인
 → STEP 06 shot_records 파일: 전 필드 병합 완전성
