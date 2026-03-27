@@ -133,8 +133,17 @@ THIS style의 드로잉 스타일로, 유튜브 교육 영상에 사용할
 ```
 
 ### 4. 채색 포인트 (P4 — YAML `v3_color_rule_template`)
+
+> **최소 채색 보장** (`sempe-ink.yaml §C1`): 캐릭터 있는 shot = 최소 2색, 없는 shot = 최소 1색. 채색 0곳 금지.
+
+캐릭터 있을 때 (has_human: main/anonym):
 ```
-반드시 {채색 대상}에만 {색상} 워시를 입혀줘 — 유일한 색이야.
+반드시 {캐릭터 대상}에 {색1} 워시를, {장면 대상}에 {색2} 워시를 입혀줘 — 이 두 곳만이 유일한 색이야.
+```
+
+캐릭터 없을 때 (has_human: none):
+```
+반드시 {장면 대상}에만 {색상} 워시를 입혀줘 — 유일한 색이야.
 ```
 
 ### ~~폐기된 항목~~ (ref 이미지가 담당)
@@ -168,9 +177,9 @@ For each section in `04_shot_composition/{RUN_ID}/{SECTION}/`:
 - Extract: `scene_type`, `creative_intent`, `line_of_action`, `prop_refs`, `costume_refs`, `secondary_chars`, `emotion_tag`, `duration_est`
 - Determine `has_human` using the decision table in `field-rules.md`
 
-### STEP 1.5. 스틸 시퀀스 연출 원칙 적용 (SECTION01~OUTRO)
+### STEP 1.5. 비디오 클립 연출 원칙 적용 (전 Section)
 
-> HOOK(영상 체이닝)에는 Counterpoint만 적용. 나머지 원칙은 스틸 구간 전용.
+> Video-First: 모든 Shot이 비디오 클립. 아래 원칙은 전체 Section에 적용.
 
 **A. Counterpoint 검증 (모든 shot)**
 

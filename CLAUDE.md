@@ -69,12 +69,13 @@ python $GV/generate_videos.py --project CH02
 ```
 projects/CH02/
   version_manifest.yaml
-  04_shot_composition/run001/{SECTION}/shot{N}.md
+  04_shot_composition/run001/{SECTION}/shot{N}.md   ← SECTION00_HOOK ~ SECTION04_OUTRO (TITLECARD 없음)
   05_visual_direction/run001/{SECTION}/shot{N}.md
   06_audio_narration/run001/{SECTION}/shot{N}.md
   07_shot_records/run001/{SECTION}/shot{N}.md + 07_ALL.txt
   08_storyboard/run001/{SECTION}/shot{N}.md
   09_assets/images/run001/shot{N}.png
+  09_assets/videos/run001/shot{N}.mp4               ← Video-First: 전 Shot 비디오 생성
 ```
 
 > **미변경**: `characters/v5/`, `props/v5/` 등 Phase 1 레퍼런스 — 독립 버전 체계 유지.
@@ -209,7 +210,7 @@ flow_prompt: |           # 순수 한국어 — 구도+감정+채색만
 
 > **ref_images 원칙**: visual-director가 완전 구성. generate_images.py는 추가/제거 없이 그대로 API에 전달.
 
-추가 조건 분기: `secondary_chars` 존재 → 다중 캐릭터 패턴, `section: TITLECARD` → 45% 여백 추가, L3+ 밀도 → 환경 구조물 패턴
+추가 조건 분기: `secondary_chars` 존재 → 다중 캐릭터 패턴, L3+ 밀도 → 환경 구조물 패턴
 
 **스타일 빌딩 블록**: `assets/reference/style/sempe-ink.yaml` E섹션 (활성: E1, E3~E4, E7, E10~E13)
 
@@ -238,9 +239,10 @@ flow_prompt: |           # 순수 한국어 — 구도+감정+채색만
 ## Shot Record YAML 필수 필드 (빠른 참조)
 
 ```yaml
-shot_id:         # 전역 순번 (0부터, shot00=Title Card)
-section:         # SECTION01 등
+shot_id:         # 전역 순번 (1부터 — TITLECARD 없음)
+section:         # SECTION00_HOOK ~ SECTION04_OUTRO (5종)
 local_id:        # Section 내 순번
+clip_rhythm:     # quick (3-4s) / standard (5-6s) / breath (6-7s) — STEP 04
 duration_est:    # 초 (float)
 emotion_tag:     # 단일 태그 (5종: HUMOR/REFLECTIVE/AWE/REVEAL/TENSION)
 emotion_nuance:  # 15종 뉘앙스 (선택, 미기재 시 tag 기본값) — STEP 04
@@ -248,24 +250,23 @@ pose_archetype:  # 15종 포즈 아키타입 H1~T3 (선택) — STEP 04
 has_human:       # main/anonym/none (main=특정 캐릭터, anonym=익명 실루엣·군중, none=사람 없음)
 scene_type:      # pipeline_reference.md §15 참조
 narration_span:  # [시작초, 끝초]
-creative_intent: # [공간][소품][카메라][조명][감정선][이전샷]
+creative_intent: # [공간][소품][카메라][조명][감정선][이전샷] — [카메라]에 모션 시퀀스 포함
 costume_refs:    # 인물명 목록 (변장 있을 때)
 prop_refs:       # 소품 파일명 목록
 secondary_chars: # 보조 인물 (직접 등장 여부 포함)
 ref_images:      # STEP 05 작성 (v3) — 참조 이미지 경로 배열 (서수 참조 순서)
 thinking_level:  # STEP 05 작성 (v3) — high (기본) / low
-flow_prompt:     # STEP 05 작성 — v3: 순수 한국어 서술 / v2: [SCENE]+[MUST]
-iv_prompt:       # STEP 05 작성 — Veo 3 I2V 모션 프롬프트
+flow_prompt:     # STEP 05 작성 — v3: 순수 한국어 서술
+iv_prompt:       # STEP 05 작성 — Veo 3 I2V 모션 프롬프트 (전 Shot 필수 — Video-First)
 el_narration:    # STEP 06 작성
 bgm:             # STEP 06 작성
 sfx:             # STEP 06 작성
 volume_mix:      # STEP 06 작성
-visual_lead:     # 이미지-나레이션 타이밍 분리 (선택, 기본 0s) — STEP 04, §17 참조
 asset_path:      # 09_assets/images/{RUN_ID}/shot{N}.png
 status:          # pending / done
 
 # --- Hook 확장 필드 (SECTION00_HOOK 전용, 조건부) ---
-hook_media_type: # image (기본) / video — STEP 04
+hook_media_type: # video (기본) — Video-First
 hook_type:       # standard (기본) / song — STEP 02→05
 video_duration:  # 클립 길이 — hook_media_type: video일 때
 video_engine:    # veo3 (기본) / kling — hook_media_type: video일 때

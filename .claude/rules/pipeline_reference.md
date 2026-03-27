@@ -18,14 +18,15 @@
   └── {RUN_ID}/
       ├── ANCHOR.md            ← 전역 사전 (단일 소스)
       ├── anchor_research.md   ← 역사적 고증 기록 (트리거 있을 때만)
-      ├── TITLECARD/shot00.md
       ├── SECTION00_HOOK/shot01.md, shot02.md ...
-      ├── SECTION01/shot11.md ...
+      ├── SECTION01/shot{N}.md ...
       └── ...
 ```
 
+> **TITLECARD 없음**: Title Card / 썸네일은 STEP 10에서 수동 처리. shot_id는 1부터 시작.
+
 ### Section 값 목록:
-`TITLECARD` · `SECTION00_HOOK` · `SECTION01` · `SECTION02` · `SECTION03` · `SECTION04_OUTRO`
+`SECTION00_HOOK` · `SECTION01` · `SECTION02` · `SECTION03` · `SECTION04_OUTRO`
 
 ---
 
@@ -52,12 +53,12 @@
 |------|------|-----------|-----------|
 | **Section** | 대본 구조 단위 | STEP 03 | `SECTION00_HOOK`, `SECTION01`~`SECTION04_OUTRO` |
 | **Scene** | 나레이션 의미 단락 단위 | STEP 06 | `scene_id` 필드로 표현 |
-| **Shot** | 비주얼 클립 단위 | STEP 04 | 전역 순번 (Shot 0 = Title Card) |
+| **Shot** | 비디오 클립 단위 (1 Shot = 1 비디오 클립) | STEP 04 | 전역 순번 (Shot 1부터 시작) |
 
 ### 관계 규칙
 - 1 Section = 복수의 Shot
-- Shot 0은 항상 Title Card로 예약
-- Shot 번호(`shot_id`)는 **전역 순번** — 에피소드 전체에서 연속
+- Shot 번호(`shot_id`)는 **전역 순번** — 에피소드 전체에서 연속, **1부터 시작**
+- Title Card / 썸네일은 STEP 10(수동 편집)에서 처리 — 파이프라인 Shot에 포함하지 않음
 
 ---
 
@@ -93,8 +94,9 @@ STEP 04 시작 시 NB-Pro(Gemini 3 Pro) vs NB2(Gemini 3.1 Flash) 중 1회 선택
 
 | 필드 | 담당 STEP | 데이터 타입 | 비고 |
 |------|----------|------------|------|
-| `shot_id` | 04 | int | 전역 순번, 0부터 |
-| `section` | 04 | enum | 6종 Section |
+| `shot_id` | 04 | int | 전역 순번, 1부터 |
+| `section` | 04 | enum | 5종 Section |
+| `clip_rhythm` | 04 | enum | `quick` (3-4s) / `standard` (5-6s) / `breath` (6-7s) |
 | `local_id` | 04 | int | Section 내 순번 |
 | `duration_est` | 04 | string | `{N}s` 형식 |
 | `emotion_tag` | 04 | enum | 5종 감정 태그 (§16 참조) |
@@ -112,7 +114,7 @@ STEP 04 시작 시 NB-Pro(Gemini 3 Pro) vs NB2(Gemini 3.1 Flash) 중 1회 선택
 | `ref_images` | 05 | list | 참조 이미지 경로 배열 (순서 = 서수 참조). visual-director가 완전 구성. style_ref + 캐릭터 ref + 소품 ref 모두 포함 |
 | `thinking_level` | 05 | enum | `high` (기본) / `low` |
 | `flow_prompt` | 05 | text | 순수 한국어 서술형 4단락 |
-| `iv_prompt` | 05 | text | Veo 3 I2V 프롬프트 |
+| `iv_prompt` | 05 | text | Veo 3 I2V 프롬프트 (전 Shot 필수 — Video-First) |
 | `scene_id` | 06 | int | 나레이션 Scene 그룹 |
 | `el_narration` | 06 | text | Audio Tag 포함 |
 | `bgm` | 06 | string | EL 프롬프트 포함 |
@@ -137,7 +139,8 @@ STEP 04 시작 시 NB-Pro(Gemini 3 Pro) vs NB2(Gemini 3.1 Flash) 중 1회 선택
 ### Hook 확장 필드 규칙
 
 - **적용 범위**: `SECTION00_HOOK` Shot에만 적용. 다른 Section에서는 무시
-- **기본값**: `hook_media_type: image`, `hook_type: standard` → 기존 동작과 동일
+- **기본값**: `hook_media_type: video`, `hook_type: standard`
+- **Video-First 참고**: 전체 Shot이 비디오 클립이므로, Hook 확장 필드는 Song Hook/특수 연출에만 관련
 - **Video Hook 연출 모드** (2종):
   - **Mode A — Kinetic Transition (권장)**: 연속 KF 이미지를 start/end로 사용. 캐릭터 이동+모션 블러로 장면 전환
     - `flow_prompt` = **단일** (해당 KF 이미지 생성용, v3 순수 한국어)
@@ -176,7 +179,7 @@ STEP 04 시작 시 NB-Pro(Gemini 3 Pro) vs NB2(Gemini 3.1 Flash) 중 1회 선택
 
 ```markdown
 # shot{shot_id:02d}.md
-SECTION: {TITLECARD | SECTION00_HOOK | SECTION01 | SECTION02 | SECTION03 | SECTION04_OUTRO}
+SECTION: {SECTION00_HOOK | SECTION01 | SECTION02 | SECTION03 | SECTION04_OUTRO}
 SHOT_ID: {shot_id}
 INPUT_REF: {이전 단계 파일 경로}
 MODEL: {사용 모델}
@@ -190,8 +193,7 @@ CREATED: {날짜}
 ```
 {단계폴더}/
   └── {RUN_ID}/
-      ├── TITLECARD/shot00.md
-      ├── SECTION00_HOOK/shot01.md ...
+      ├── SECTION00_HOOK/shot{N}.md ...
       ├── SECTION01/
       ├── SECTION02/
       ├── SECTION03/

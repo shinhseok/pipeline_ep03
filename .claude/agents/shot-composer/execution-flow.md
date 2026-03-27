@@ -144,10 +144,11 @@ Section 합계: {N}개 Shot / {N}초
 
 ```
 📊 NARRATION MAP 전체 요약
-총 Shot 수: {N}개 (TITLECARD 포함)
+총 Shot 수: {N}개 (shot_id 1부터)
 총 예상 시간: {N}초
-평균 Shot 길이: {N}초
-Section별: TITLECARD:1 / HOOK:{N} / SEC01:{N} / SEC02:{N} / SEC03:{N} / OUTRO:{N}
+평균 클립 길이: {N}초
+clip_rhythm 분포: quick:{N} / standard:{N} / breath:{N}
+Section별: HOOK:{N} / SEC01:{N} / SEC02:{N} / SEC03:{N} / OUTRO:{N}
 
 비주얼 ANCHOR 기획 (Phase 1 대상):
 | 대상 | Type | 파일명 | 적용 Section |
@@ -188,12 +189,13 @@ PHASE A 완료 + 사용자 승인 후, 오케스트레이터가 Section별로 sh
 - RUN_ID, ANCHOR_REF 경로
 
 각 에이전트는 자신의 섹션만 처리한다:
-- TITLECARD: 별도 (shot_id=0, 오케스트레이터가 직접 처리하거나 단독 호출)
 - SECTION00_HOOK: 에이전트 1
 - SECTION01: 에이전트 2
 - SECTION02: 에이전트 3
 - SECTION03: 에이전트 4
 - SECTION04_OUTRO: 에이전트 5
+
+> **TITLECARD 없음**: Title Card / 썸네일은 STEP 10(수동 편집). shot_id는 1부터.
 
 ⚠️ 각 에이전트는 자신의 SHOT_ID_RANGE 이외의 shot_id를 절대 사용하지 않는다.
 ⚠️ shot_id는 narration_map에서 이미 확정된 값 — 에이전트가 임의로 변경 금지.
@@ -206,17 +208,7 @@ PHASE A 완료 + 사용자 승인 후, 오케스트레이터가 Section별로 sh
 ☐ narration_span을 변경하지 않겠다는 원칙을 숙지했는가
 
 
-### STEP 4. 타이틀 카드 Shot 생성 (Shot 0)
-
-→ shot_id: 0, section: TITLECARD, local_id: 01
-→ ⚠️ TITLECARD = 유튜브 썸네일 전용
-  - 좌측 45% = 제목 텍스트 overlay 공간 (완전히 비워둠)
-  - 우측 55% = 비주얼 요소 1~2개 집중
-  - creative_intent [공간]: "좌측 45% 공백(제목 overlay 예약), 우측 55%에 {요소} 배치" 필수
-→ SAVE: 04_shot_composition/{RUN_ID}/TITLECARD/shot00.md
-
-
-### STEP 5. Section별 Shot Record 생성
+### STEP 4. Section별 Shot Record 생성
 
 narration_map의 각 행(local_id 순)을 Shot으로 변환한다.
 
@@ -280,7 +272,7 @@ narration_map의 각 행(local_id 순)을 Shot으로 변환한다.
 배치 완료 후 자동 진행. 배치 요약만 출력: "Batch N: Shot X~Y 저장 완료 (N개)"
 
 
-### STEP 6. 최종 검증
+### STEP 5. 최종 검증
 
 → (A) 유머 공백 점검: "코믹 없는 연속 구간" 최대값 ≥3 이면 수정
 → (B) Visual Rhythm Check 출력 (§8 규칙 6 형식)

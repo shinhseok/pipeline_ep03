@@ -90,9 +90,23 @@ anchor_prop_style: >-
   outside the lines, paper white showing through.
 
 # ═══════════════════════════════════════════════════════
-# C. 최소 색 규칙 (Minimal Color — v2 완화)
+# C. 채색 규칙 (Minimal Color — 하한+상한 체계)
 # ═══════════════════════════════════════════════════════
 
+# ── C1. 최소 채색 보장 (Minimum Color Guarantee) ──
+# 모든 shot에서 최소 채색을 보장한다. 채색 0곳(완전 무색)은 금지.
+minimum_coloring:
+  character_rule: >-
+    has_human: main 또는 anonym일 때, 캐릭터 의상·소지품 중 반드시 1곳 채색.
+    emotion_nuance의 color_point가 "채색 최소"여도 캐릭터 1곳은 반드시 유지.
+  scene_rule: >-
+    모든 shot에서 장면의 중요 포인트(소품 또는 배경 요소) 최소 1곳 채색.
+    has_human: none일 때도 소품/배경에 반드시 1곳.
+  summary: >-
+    캐릭터 있는 shot = 최소 2색 (캐릭터 1 + 장면 1).
+    캐릭터 없는 shot = 최소 1색 (장면 1).
+
+# ── C2. 최대 채색 상한 ──
 # 장면당 최대 색 수
 max_colors_per_scene: 5
 
@@ -100,7 +114,7 @@ max_colors_per_scene: 5
 character_coloring:
   max_colored_spots: 2
   description: >-
-    캐릭터 채색은 최대 2곳 허용 (예: 목도리 + 모자, 또는 앞치마 + 소품 상호작용).
+    캐릭터 채색은 최소 1곳, 최대 2곳 (예: 목도리 + 모자, 또는 앞치마 + 소품).
     나머지 몸체·팔다리·얼굴은 순수 잉크 라인워크 — 색 없음.
   body_rule: "pure ink linework, NO color fill on body"
   allowed_spot_examples:
@@ -109,10 +123,10 @@ character_coloring:
     - "apron/costume accent — single muted color wash"
     - "key narrative prop in hand — single muted color wash"
 
-# 소품 채색 규칙
-prop_coloring:
+# 소품/배경 채색 규칙
+scene_coloring:
   description: >-
-    서사적으로 중요한 소품 최대 2개에 단일 색 허용.
+    장면의 서사적 중요 포인트(소품 또는 배경 요소) 최소 1곳, 최대 2곳에 단일 색 허용.
     나머지 소품·환경선은 전부 잉크 라인만.
 
 # ═══════════════════════════════════════════════════════
@@ -180,8 +194,12 @@ v3_redraw_rule: >-
 
 # ── E7. 색 계획 템플릿 (P5 단락) ──
 v3_color_rule_template: >-
-  전체적으로는 흑백의 잉크 선으로만 묘사하고, 오직 {채색_대상}에만
-  {색상} 워시 채색을 살짝 입혀줘.
+  전체적으로는 흑백의 잉크 선으로만 묘사하되, 반드시 {채색_대상1}에
+  {색1} 워시를, {채색_대상2}에 {색2} 워시를 입혀줘 — 이 두 곳만이
+  유일한 색이야.
+v3_color_rule_template_no_human: >-
+  전체적으로는 흑백의 잉크 선으로만 묘사하되, 반드시 {채색_대상}에만
+  {색상} 워시를 입혀줘 — 유일한 색이야.
 
 # ── E8. 단일 장면 가드 — ⚠️ 폐기 (구도 묘사에서 장면이 명시됨) ──
 # P3 구도 묘사에서 단일 장면이 자연스럽게 묘사되므로 별도 가드 불필요.
@@ -283,7 +301,7 @@ v3_emotion_direction:
       bg_density: L0
       prop_relation: "소품 0.5배 소형, 내려다봄"
       camera: "하이앵글 WS"
-      color_point: "채색 최소, 연한 grey wash"
+      color_point: "의상 1곳 연한 grey wash + 소품에 muted tone 1곳"
 
   REFLECTIVE:
     contemplative:
@@ -327,7 +345,7 @@ v3_emotion_direction:
       bg_density: "L0 (광활)"
       prop_relation: "소품 없거나 극소, 여백 주인공"
       camera: "XXWS, 탑다운"
-      color_point: "채색 없음, 순수 잉크"
+      color_point: "의상 1곳 faint lavender + 지평선/여백 경계에 pale wash 1곳"
     wonder:
       face: "눈 반짝이듯 크게, 입 벌어짐"
       upper_body: "앞으로 기울기"
@@ -379,7 +397,7 @@ v3_emotion_direction:
       bg_density: "L4 (천장 압박)"
       prop_relation: "소품이 위에서 내려누름, 5배+"
       camera: "하이앵글, 틸트"
-      color_point: "채색 최소, 억압적"
+      color_point: "의상 1곳 muted grey + 압박 소품에 dark wash 1곳"
     defiant:
       face: "눈 부릅뜸, 입 꽉 다문"
       upper_body: "앞으로 기울어 맞섬"
