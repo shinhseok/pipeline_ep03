@@ -184,6 +184,45 @@ Report after all complete:
 
 ### MERGE
 
+**STEP 0.5 — 피드백 수집 및 사용자 보고 (feedback-protocol 연동)**
+
+```bash
+# 피드백 파일 존재 확인
+ls projects/{PROJECT_CODE}/feedback/{RUN_ID}/*.md 2>/dev/null
+```
+
+피드백 파일이 없으면:
+→ `✅ Upstream feedback: 0건 — MERGE 진행` 출력 후 STEP 1로 진행.
+
+피드백 파일이 있으면:
+1. 전체 피드백 파일 읽기
+2. 심각도별 분류: BLOCK / FLAG / NOTE
+3. 아래 형식으로 사용자에게 보고:
+
+```
+## 📋 FEEDBACK REPORT — {PROJECT_CODE} / {RUN_ID}
+수집 일시: {YYYY-MM-DD HH:mm}
+피드백 파일: {N}개 / 총 항목: {N}건
+
+### 🔴 BLOCK ({N}건) — merge 전 해결 필수
+| # | FROM | TO | Shot | 현상 요약 | 제안 |
+|---|------|----|------|----------|------|
+
+### 🟡 FLAG ({N}건) — 워크어라운드 적용됨, 검토 권장
+| # | FROM | TO | Shot | 현상 요약 | 워크어라운드 | 제안 |
+|---|------|----|------|----------|------------|------|
+
+### 🔵 NOTE ({N}건)
+{요약만}
+```
+
+4. 사용자 응답에 따라:
+   - **BLOCK 있음** → 사용자 결정 대기 (merge 진행 불가)
+   - **FLAG만** → "워크어라운드 수용하고 진행" 또는 "수정 후 재실행" 선택 요청
+   - **NOTE만** → 자동 진행 (보고만)
+
+5. prompt-auditor 보고서 + pipeline-monitor 이슈도 함께 수집하여 통합 보고.
+
 **STEP 1 — flow_prompt 구조 검증 (의무 게이트, merge 전 블로킹)**
 ```bash
 python .claude/skills/run-directing/scripts/validate_flow_prompt.py --project {PROJECT_CODE} --source 06
@@ -239,6 +278,23 @@ Next:
   3. CapCut 편집 시작
 ```
 
+### POST-COMPLETE — 피드백 누적 로그
+
+에피소드 완료 후, 이번 RUN의 피드백을 누적 로그에 추가한다:
+
+피드백이 있었으면:
+→ `feedback/cumulative_log.md`에 이번 RUN의 패턴을 추가
+→ 3회 이상 반복 패턴이 있으면 사용자에게 `🔁 반복 패턴 경고` 보고:
+
+```
+🔁 반복 패턴 경고 — 아래 이슈가 {N}회 반복되었습니다:
+| 패턴 | 빈도 | FROM → TO | 제안 |
+|------|------|-----------|------|
+| {description} | {N}/{total_episodes} | {from} → {to} | {recommendation} |
+
+에이전트 프롬프트 수정을 검토하시겠습니까?
+```
+
 ---
 
 ## Resume from Specific Step
@@ -265,6 +321,9 @@ Action: {명확한 해결 지시}
 - ❌ version_manifest.yaml 없이 RUN_ID 임의 설정
 - ❌ merge/render 스크립트 실행 전 validate 스크립트 건너뛰기
 - ❌ 서브에이전트 출력 직접 수정 (재위임으로 처리)
+- ❌ BLOCK 피드백을 사용자 확인 없이 무시하고 merge 진행
+- ❌ 피드백 대상 에이전트의 파일을 run-director가 직접 수정 (재위임으로 처리)
+- ❌ 피드백 파일 자체를 삭제 또는 수정 (감사 추적용 보존)
 
 ---
 
@@ -280,6 +339,10 @@ After pipeline completes (or at each checkpoint):
 - [ ] Song Hook 선택 시: SONG_CHECK + [BRIDGE] 존재 확인
 - [ ] Video Hook 선택 시: SECTION00_HOOK Shot에 hook_media_type + video_duration + video_engine 존재 확인
 - [ ] Video Hook 선택 시: Phase 0 이미지 생성 → Phase 1 → Phase 2 순서 준수 확인
+- [ ] MERGE 전 feedback/{RUN_ID}/ 디렉토리를 확인했는가
+- [ ] BLOCK 피드백이 있으면 사용자에게 보고하고 결정을 받았는가
+- [ ] 에피소드 완료 후 cumulative_log.md를 업데이트했는가
+- [ ] 3회+ 반복 패턴이 있으면 사용자에게 경고했는가
 
 ### STEP 09 이미지 생성 — 섹션별 병렬 실행 (권장)
 

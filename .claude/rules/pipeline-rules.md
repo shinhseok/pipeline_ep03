@@ -60,6 +60,8 @@
 | 수동 | STEP 01, 09, 10 | AI 자동화 불가 |
 
 > STEP 05 + 06은 병렬 실행 가능 (상호 의존성 없음 — 둘 다 04만 읽음).
+> **피드백 루프**: visual-director, audio-director는 실행 중 상류 문제를 `feedback/{RUN_ID}/`에 기록.
+> run-director가 MERGE 게이트(STEP 0.5)에서 수집·분류하여 사용자에게 보고. 상세: `.claude/rules/feedback-protocol.md`
 
 ---
 

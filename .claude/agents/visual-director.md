@@ -326,6 +326,40 @@ asset_path: 09_assets/images/{RUN_ID}/shot{shot_id:02d}.png
 
 ---
 
+## Upstream Feedback (상류 피드백 — STEP 04 shot-composer 대상)
+
+### 피드백 수집 절차
+
+flow_prompt 작성 중 아래 조건을 감지하면 메모리에 피드백 항목을 누적한다.
+**정상 출력 생성을 우선** — 워크어라운드가 가능하면 적용 후 기록한다.
+
+### 감지 항목
+
+| ID | 조건 | 심각도 | 워크어라운드 |
+|----|------|--------|------------|
+| VS-01 | `[공간]` 밀도 등급 ≥ L2인데 구조물 서술 없음 | FLAG | narration_span + emotion_tag 맥락으로 배경 자체 생성 |
+| VS-02 | creative_intent에서 has_human 판정 불가 (캐릭터 관련 정보 모호) | FLAG | 보수적으로 `none` 판정 후 기록 |
+| VS-03 | costume_refs/prop_refs가 ANCHOR에 없는 항목 참조 | BLOCK | 출력 불가 — 해당 shot 건너뜀 |
+| VS-04 | `[감정선]`이 "슬픈 분위기" 수준으로 추상적 — 결정적 순간 포착 불가 | FLAG | narration_span에서 감정 단서를 추출하여 보강 |
+| VS-05 | 인접 shot 간 line_of_action + 카메라 거리 동시 급변 (시각 단절) | FLAG | 중간 톤으로 부드럽게 전환 처리 |
+| VS-06 | scene_type이 narration_span 내용과 부적합 | FLAG | scene_type에 최대한 맞추되 피드백 기록 |
+| VS-07 | emotion_nuance 미지정 + tag만으로 톤 결정이 모호 | NOTE | 기본 뉘앙스 적용 |
+| VS-08 | Counterpoint 위반 — narration과 creative_intent가 동어 반복 | FLAG | flow_prompt에서 체감/감각 방향으로 재해석 |
+
+### 피드백 출력
+
+섹션 완료 시 피드백 항목이 1건 이상이면:
+→ `feedback/{RUN_ID}/visual-director_{SECTION}_{timestamp}.md` 저장
+
+피드백 항목이 0건이면:
+→ 파일 생성 안 함. Completion Report에 "Upstream feedback: 0건" 기록.
+
+### 피드백 파일 형식
+
+feedback-protocol.md §3.2 YAML 형식을 따른다.
+
+---
+
 ## Self-Reflection
 
 After completing all sections:
@@ -363,6 +397,8 @@ Report: "Visual direction self-check: {N} shots across {N} sections, FLOW_MODEL:
 - Exceed equivalent of 5 constraints in narrative text
 - Use quality suffixes (4k, masterpiece, HD)
 - Use English structural labels in flow_prompt (WHO, WHAT, WHY, HOW)
+- ❌ 피드백을 근거로 STEP 04 파일을 직접 수정 (보고만 — 수정은 run-director 경유)
+- ❌ BLOCK 피드백 해당 shot을 워크어라운드로 우회 출력 (건너뛰고 피드백에 기록)
 
 ---
 
@@ -372,4 +408,5 @@ Report: "Visual direction self-check: {N} shots across {N} sections, FLOW_MODEL:
 [{SECTION} 비주얼 디렉팅 완료]
 저장: 05_visual_direction/{RUN_ID}/{SECTION}/ — {N}개 파일 (delta, v3)
 Shot 수: {N}개 | FLOW_MODEL: {NB-Pro | NB2}
+Upstream feedback: {N}건 (BLOCK {N} / FLAG {N} / NOTE {N}) → feedback/{RUN_ID}/ 기록
 ```

@@ -96,6 +96,7 @@ assets/reference/style/
 |------|------|
 | 행동 규칙 (§1,2,5~9,11,13) | `.claude/rules/pipeline-rules.md` |
 | 파일 네이밍·저장 위치·스키마 | `.claude/rules/pipeline_reference.md` |
+| 피드백 루프 규약 (역방향 통신) | `.claude/rules/feedback-protocol.md` |
 
 에이전트 / 스킬 위치:
 - 오케스트레이터: `.claude/agents/run-director.md` (sonnet)
