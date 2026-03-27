@@ -315,7 +315,7 @@ P5 카운트 문장으로 해결:
 | 해빛/변장 캐릭터 전신 등장 | `main` | costume_ref 턴어라운드 |
 | 캐릭터 신체 일부 — 특정 캐릭터의 손/팔 | `main` | costume_ref 또는 `assets/reference/style/main_turnaround.jpeg` |
 | 명명된 학자/인물 등장 | `main` | costume_ref 필수 |
-| 보조 캐릭터(happy_rabbit) 등장 | `main` | `assets/reference/style/happy_rabbit.jpeg` |
+| 보조 캐릭터(happy_rabbit) 등장 | `main` | `assets/reference/style/happy_rabbit.jpeg` — 디지털 토끼: 표정은 디지털/스크린 형태(LED 눈, 픽셀)로만 |
 | 익명 실루엣 (누구인지 특정하지 않음) | `anonym` | `assets/reference/style/character_reference.jpeg` |
 | 군중 실루엣 (해칭 처리된 콩 캐릭터) | `anonym` | `assets/reference/style/character_reference.jpeg` |
 | 익명의 손/팔 (누구의 손인지 불명) | `anonym` | `assets/reference/style/character_reference.jpeg` |

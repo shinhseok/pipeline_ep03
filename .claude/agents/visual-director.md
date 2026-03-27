@@ -361,6 +361,10 @@ image_prompt 작성 중 아래 조건을 감지하면 메모리에 피드백 항
 | VS-06 | scene_type이 narration_span 내용과 부적합 | FLAG | scene_type에 최대한 맞추되 피드백 기록 |
 | VS-07 | emotion_nuance 미지정 + tag만으로 톤 결정이 모호 | NOTE | 기본 뉘앙스 적용 |
 | VS-08 | Counterpoint 위반 — narration과 creative_intent가 동어 반복 | FLAG | image_prompt에서 체감/감각 방향으로 재해석 |
+| VS-09 | image_prompt에 캐릭터 외형 묘사(체형, 귀, 꼬리, 체형 비율 등)가 포함되어 ref 시트와 충돌 위험 | FLAG | 외형 묘사 제거. 표정은 허용하되 캐릭터 화풍에 맞는 수준으로 (예: "눈이 커지고", "입이 벌어진"). "THIS {name}의 형태를 정확히 따라 그려줘" 강화 |
+| VS-10 | has_human:none + 소품 없음 (순백 PAUSE Shot) — 이미지 생성 시 의미 없는 결과물 위험 | NOTE | breath/PAUSE Shot은 이미지 생성 스킵 검토 권장. 생성 시 최소 시각 요소(레일 자국, 잉크 점 등) 포함 |
+| VS-11 | 메인 캐릭터의 의상 색(스카프 등)이 ref 시트와 다르게 채색될 위험 — image_prompt P4에서 장면 포인트만 지정하고 캐릭터 색은 ref 위임이지만, NB2가 무시하는 경우 있음 | NOTE | P4에 "캐릭터의 의상 색은 참조 이미지 그대로 유지" 문구 강화. 장면 포인트 색과 캐릭터 의상 색이 혼동되지 않도록 대상 명확히 지정 |
+| VS-12 | 이미지 외곽에 사각 프레임/테두리 선이 렌더링됨 — NB2가 "frame", "border", "panel" 키워드 없이도 간혹 프레임 추가 | NOTE | image_prompt에 "프레임이나 테두리 선 없이" 명시 추가 검토. self-check F항 "frame/border/panel 없음" 확인 강화 |
 
 ### 피드백 출력
 

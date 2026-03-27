@@ -208,8 +208,9 @@ image_prompt: |           # 순수 한국어 — 구도+감정+채색만
 
 추가 조건 분기: `secondary_chars` 존재 → 다중 캐릭터 패턴 (예: `[happy_rabbit]` = 보조 나레이터 캐릭터), L3+ 밀도 → 환경 구조물 패턴
 
-> **보조 캐릭터 (happy_rabbit)**: 대본 `[보조]` 태그 장면에 사용하는 채널 공통 캐릭터.
+> **보조 캐릭터 (happy_rabbit)**: 대본 `[보조]` 태그 장면에 사용하는 채널 공통 디지털 토끼 캐릭터.
 > `secondary_chars: [happy_rabbit]` → ref_images에 `happy_rabbit.jpeg` 포함, image_prompt에서 `THIS happy_rabbit` 참조.
+> **표정 규칙**: 디지털/스크린 형태로 표현 (LED 눈, 픽셀 표정). 아날로그 표정 금지.
 
 **스타일 빌딩 블록**: `assets/reference/style/sempe-ink.yaml` E섹션 (활성: E1, E3~E4, E7, E10~E13)
 

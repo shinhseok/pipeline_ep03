@@ -241,10 +241,21 @@ def resolve_ref_path(reference_dir: Path, relative_path: str) -> Path:
     2) 워크스페이스 루트 기준: assets/reference/style/... → workspace_root/assets/...
     존재하지 않으면 그대로 반환 (호출측에서 존재 확인).
     """
-    # 1) reference_dir 기준 시도
-    resolved = reference_dir / relative_path
+    # 0) 09_assets/reference/ 접두사 제거 (ANCHOR ref_paths가 프로젝트 루트 기준일 때)
+    stripped = relative_path
+    for prefix in ("09_assets/reference/", "09_assets\\reference\\"):
+        if relative_path.startswith(prefix):
+            stripped = relative_path[len(prefix):]
+            break
+    # 1) reference_dir 기준 시도 (접두사 제거 후)
+    resolved = reference_dir / stripped
     if resolved.exists():
         return resolved
+    # 1b) 원본 경로로도 시도
+    if stripped != relative_path:
+        resolved_orig = reference_dir / relative_path
+        if resolved_orig.exists():
+            return resolved_orig
     # 2) 워크스페이스 루트 기준 시도 (assets/reference/style/ 등 채널 공통 경로)
     ws_root = reference_dir
     while ws_root.name and ws_root.name != "projects":
@@ -302,20 +313,34 @@ def generate_image(client, model_name: str, text_prompt: str, ref_image_paths: l
     if thinking_level == "low" and "flash" not in model_name:
         think_enum = types.ThinkingLevel.LOW
 
-    response = client.models.generate_content(
-        model=model_name,
-        contents=contents,
-        config=types.GenerateContentConfig(
-            response_modalities=["IMAGE"],
-            image_config=types.ImageConfig(aspect_ratio="16:9"),
-            thinking_config=types.ThinkingConfig(
-                thinking_level=think_enum
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    response_modalities=["IMAGE"],
+                    image_config=types.ImageConfig(aspect_ratio="16:9"),
+                    thinking_config=types.ThinkingConfig(
+                        thinking_level=think_enum
+                    )
+                )
             )
-        )
-    )
-    for part in response.candidates[0].content.parts:
-        if part.inline_data:
-            return part.inline_data.data
+            for part in response.candidates[0].content.parts:
+                if part.inline_data:
+                    return part.inline_data.data
+            break
+        except Exception as e:
+            err_str = str(e)
+            if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+                wait = 5 * (attempt + 1)  # 5s, 10s, 15s
+                print(f"   ⏳ 429 쿼터 초과 — {wait}초 대기 후 재시도 ({attempt+1}/{max_retries})")
+                time.sleep(wait)
+                if attempt == max_retries - 1:
+                    raise
+            else:
+                raise
 
     for part in response.candidates[0].content.parts:
         if part.text:
@@ -437,7 +462,7 @@ def parse_anchor_phase1(anchor_text: str) -> list[dict]:
             continue
         m_type = re.search(r"^#{0,6}\s*Type:\s*(\S+)", block, re.MULTILINE)
         m_file = re.search(r"^#{0,6}\s*Filename:\s*(\S+)", block, re.MULTILINE)
-        m_prompt = re.search(r"^Flow\s*프롬프트:\s*\n(.*)", block, re.DOTALL | re.MULTILINE)
+        m_prompt = re.search(r"^(?:Flow|Image)\s*프롬프트:\s*\n(.*)", block, re.DOTALL | re.MULTILINE)
         if not (m_type and m_file and m_prompt):
             continue
         item = {
@@ -734,7 +759,8 @@ def run_phase1(client, project_root: Path, run_id: str, reference_dir: Path, ove
 
 def process_file(client, filepath: Path, project_root: Path, reference_dir: Path,
                  overwrite: bool, target_shot_ids: set = None, current_run: str = None,
-                 style_ref_path: Path = None, chain_mode: bool = False, chain_prev_image: Path = None):
+                 style_ref_path: Path = None, chain_mode: bool = False, chain_prev_image: Path = None,
+                 error_log: list = None):
     text = filepath.read_text(encoding="utf-8")
 
     # 모델: NB2 고정
@@ -745,7 +771,7 @@ def process_file(client, filepath: Path, project_root: Path, reference_dir: Path
     shots = parse_yaml_shot_records(text)
     if not shots:
         print(f"   [WARN] Shot Record를 찾을 수 없습니다: {filepath.name}")
-        return 0, 0
+        return 0, 0, None
 
     generated = 0
     skipped = 0
@@ -785,6 +811,8 @@ def process_file(client, filepath: Path, project_root: Path, reference_dir: Path
                         ref_image_paths.append(ref_p)
                 else:
                     print(f"   [Shot {shot_id}] ⚠️ ref 파일 미존재 → 스킵: {f}")
+                    if error_log is not None:
+                        error_log.append({"shot_id": shot_id, "type": "REF_MISSING", "detail": f})
 
         # 체이닝 모드: 이전 Shot 생성 이미지를 ref에 추가
         if chain_mode and _prev_chain_image and _prev_chain_image.exists():
@@ -821,9 +849,12 @@ def process_file(client, filepath: Path, project_root: Path, reference_dir: Path
             generated += 1
             if chain_mode:
                 _prev_chain_image = out_path
-            time.sleep(1.5)
+            time.sleep(3)  # RPM 관리: 429 재시도가 방어하므로 간격 최소화
         except Exception as e:
             print(f"   ❌ 오류: {e}")
+            err_type = "QUOTA_EXHAUSTED" if ("429" in str(e) or "RESOURCE_EXHAUSTED" in str(e)) else "API_ERROR"
+            if error_log is not None:
+                error_log.append({"shot_id": shot_id, "type": err_type, "detail": str(e)[:200]})
 
     return generated, skipped, _prev_chain_image
 
@@ -985,6 +1016,7 @@ def main():
     total_generated = 0
     total_skipped   = 0
     _lock = threading.Lock()
+    _errors = []  # 실행 로그: 오류 수집
 
     _chain_prev = None  # 체이닝 모드: 파일 간 마지막 이미지 전달
 
@@ -992,7 +1024,7 @@ def main():
         nonlocal _chain_prev
         with _lock:
             print(f"\n📄 {f.name}")
-        gen, skip, last_img = process_file(client, f, project_root, reference_dir, args.overwrite, target_shot_ids, current_run=current_run, style_ref_path=_style_ref_path, chain_mode=args.chain, chain_prev_image=_chain_prev)
+        gen, skip, last_img = process_file(client, f, project_root, reference_dir, args.overwrite, target_shot_ids, current_run=current_run, style_ref_path=_style_ref_path, chain_mode=args.chain, chain_prev_image=_chain_prev, error_log=_errors)
         with _lock:
             nonlocal total_generated, total_skipped
             total_generated += gen
@@ -1005,19 +1037,76 @@ def main():
     if args.chain:
         print(f"   > 체이닝 모드: 순차 실행 (이전 Shot → 다음 Shot ref 자동 추가)")
 
-    if effective_workers <= 1:
-        for f in target_files:
-            _process_one(f)
-    else:
-        print(f"   > 병렬 처리: --workers {args.workers}")
-        with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
-            futures = {executor.submit(_process_one, f): f for f in target_files}
-            for future in concurrent.futures.as_completed(futures):
-                if future.exception():
-                    with _lock:
-                        print(f"   ❌ 오류: {futures[future].name} — {future.exception()}")
+    def _save_feedback(extra_error=None):
+        """오류 피드백 파일 저장. 비정상 종료 시에도 호출."""
+        all_errors = list(_errors)
+        if extra_error:
+            all_errors.append(extra_error)
+        if not all_errors:
+            print("   피드백: 0건 — 이상 없음")
+            return
+        run_id = current_run or "v1"
+        feedback_dir = project_root / "feedback" / run_id
+        feedback_dir.mkdir(parents=True, exist_ok=True)
+        from datetime import datetime
+        ts = datetime.now().strftime("%Y%m%dT%H%M")
+        feedback_path = feedback_dir / f"generate-images_{ts}.md"
 
-    print(f"\n✅ 완료 — 생성: {total_generated}개 / 스킵: {total_skipped}개")
+        quota_errors = [e for e in all_errors if e["type"] == "QUOTA_EXHAUSTED"]
+        ref_errors = [e for e in all_errors if e["type"] == "REF_MISSING"]
+        api_errors = [e for e in all_errors if e["type"] == "API_ERROR"]
+        crash_errors = [e for e in all_errors if e["type"] == "CRASH"]
+
+        lines = [
+            "---",
+            "from: generate-images",
+            "to: system",
+            f"run_id: {run_id}",
+            f"created: {datetime.now().isoformat()}",
+            f"error_count: {len(all_errors)}",
+            "",
+            "items:",
+        ]
+        for i, err in enumerate(all_errors, 1):
+            severity = "FLAG" if err["type"] == "QUOTA_EXHAUSTED" else "BLOCK"
+            lines.append(f"  - id: GI-{i:03d}")
+            lines.append(f"    severity: {severity}")
+            lines.append(f"    shot_id: {err.get('shot_id', 'N/A')}")
+            lines.append(f"    type: {err['type']}")
+            lines.append(f"    detail: |")
+            lines.append(f"      {err['detail']}")
+        lines.append("---")
+
+        feedback_path.write_text("\n".join(lines), encoding="utf-8")
+        print(f"\n📋 피드백 저장: {feedback_path.relative_to(project_root)}")
+        print(f"   QUOTA: {len(quota_errors)} / REF: {len(ref_errors)} / API: {len(api_errors)} / CRASH: {len(crash_errors)}")
+
+    try:
+        if effective_workers <= 1:
+            for f in target_files:
+                _process_one(f)
+        else:
+            print(f"   > 병렬 처리: --workers {args.workers}")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
+                futures = {executor.submit(_process_one, f): f for f in target_files}
+                for future in concurrent.futures.as_completed(futures):
+                    if future.exception():
+                        with _lock:
+                            print(f"   ❌ 오류: {futures[future].name} — {future.exception()}")
+
+        print(f"\n✅ 완료 — 생성: {total_generated}개 / 스킵: {total_skipped}개")
+        _save_feedback()
+
+    except Exception as e:
+        import traceback
+        print(f"\n💥 비정상 종료: {e}")
+        traceback.print_exc()
+        _save_feedback(extra_error={
+            "shot_id": "N/A",
+            "type": "CRASH",
+            "detail": f"스크립트 비정상 종료: {str(e)[:200]}"
+        })
+        sys.exit(1)
 
 
 

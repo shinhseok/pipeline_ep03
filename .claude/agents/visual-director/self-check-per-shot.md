@@ -42,6 +42,7 @@ Before saving each shot, verify all items:
 - [ ] `main`인데 신체 일부만 → ref_images에 캐릭터 ref + `THIS {name}의 손/실루엣` 패턴
 - [ ] `anonym`인데 신체 일부만 → `assets/reference/style/character_reference.jpeg` + `THIS character_reference의 형태를 따른 손/실루엣` 패턴
 - [ ] 제네릭 "콩 캐릭터" 표현 사용 금지 → 반드시 THIS {name} 참조
+- [ ] **VS-09 외형 충돌 방지**: image_prompt에 캐릭터 체형·외형 묘사(귀, 꼬리, 체형 비율 등) 없음 — ref 시트가 담당. 표정 묘사는 허용 (ref 시트가 1표정이므로 프롬프트로 변화 필요). "THIS {name}의 형태를 정확히 따라 그려줘" 패턴 사용
 
 ## E. 추가 조건 분기 검증
 

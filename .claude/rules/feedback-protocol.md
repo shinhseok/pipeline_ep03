@@ -117,6 +117,10 @@ items:
 | VS-06 | `scene_type`이 narration_span 내용과 부적합 (예: 감정 코멘터리인데 Text-Motion) | FLAG |
 | VS-07 | `emotion_nuance` 미지정 + emotion_tag만으로 장면 톤 결정 어려움 | NOTE |
 | VS-08 | Counterpoint 위반 — narration과 creative_intent가 같은 내용 반복 | FLAG |
+| VS-09 | image_prompt에 캐릭터 외형 묘사(체형·귀·꼬리 등)가 포함되어 ref 시트 충돌 위험. 표정은 허용 (ref 시트가 1표정이므로 프롬프트로 변화 필요) | FLAG |
+| VS-10 | has_human:none + 소품 없음 (순백 PAUSE Shot) — 이미지 생성 불필요 또는 의미 없는 결과물 위험 | NOTE |
+| VS-11 | 메인 캐릭터 의상 색(스카프 등)이 ref 시트와 다르게 채색됨 — NB2가 장면 포인트 색을 캐릭터에 적용하는 오류 | NOTE |
+| VS-12 | 이미지 외곽에 사각 프레임/테두리 선 렌더링 — NB2가 "frame" 키워드 없이도 간혹 프레임 추가 | NOTE |
 
 ### 4.2 audio-director → shot-composer
 
