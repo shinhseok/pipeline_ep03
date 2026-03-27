@@ -1,0 +1,478 @@
+# ──────────────────────────────────────────────────────
+# Style Definition: Sempé Fine Ink
+# 채널 공통 비주얼 스타일 — 모든 에이전트가 이 파일을 단일 소스로 참조
+# ──────────────────────────────────────────────────────
+
+name: "Sempé Fine Ink"
+version: 4
+description: >
+  Scribbly hand-drawn doodle + transparent messy watercolor wash.
+  Whimsical and heartwarming. 넉넉한 여백, lavender/peach 파스텔 워시.
+
+# ═══════════════════════════════════════════════════════
+# A. 씬 이미지용 (flow_prompt — STEP 06)
+# ═══════════════════════════════════════════════════════
+
+# ── A1. SCENE [HOW] 스타일 앵커 문구 (4번째 줄 고정 삽입) ──
+# visual-director가 [SCENE] 블록의 HOW 줄에 이 문구를 반드시 삽입한다.
+style_anchor: >-
+  Scribbly, hand-drawn doodle with transparent, messy watercolor
+  wash. Whimsical and heartwarming.
+
+# ── A2. art_style (레거시 호환용 — 기존 JSON 의존 코드 참조) ──
+art_style: >-
+  Scribbly, hand-drawn doodle with transparent, messy
+  watercolor wash in lavender and peach, colors carelessly
+  bleeding outside the lines, paper white showing through.
+  Whimsical and heartwarming. Generous white negative
+  space around subjects.
+
+# ── A3. background 기본값 ──
+background_default: "Bare white canvas. No fill or tint on empty areas."
+
+# ── A4. background 환경 암시 확장 (creative_intent [공간] 기반 선택) ──
+background_variants:
+  horizon: "Bare white canvas with a single faint horizon line at lower third. No fill or tint on empty areas."
+  floor: "Bare white canvas with a few sparse pencil marks suggesting a floor plane at bottom. No fill or tint on empty areas."
+  shadow: "Bare white canvas with two or three faint diagonal hatch marks suggesting ground shadow beneath the character. No fill or tint on empty areas."
+  # v2 추가: 잉크 선 환경 구조물 허용
+  ink_structure: "Bare white canvas with thin ink outline structures ({description}). No fill or tint on empty areas."
+
+# ── A5. background 금지 표현 ──
+background_prohibited:
+  - "fill, tint, wash, gradient on empty areas"
+  - "Pure solid white..., Off-white..., Pure white..."
+  - "사실적 환경 (사진, 3D, 풍경화)"
+
+# ── A6. REDRAW [MUST] 항목 (고정 — SOURCE REFERENCE 있을 때만 적용) ──
+redraw_must: >-
+  REDRAW [CHARACTER SOURCE] in scribbly doodle style —
+  preserve shape from reference, translate into scribbly
+  hand-drawn lines with transparent messy watercolor wash.
+  REDRAW [OBJECT SOURCE] props in matching doodle style,
+  preserving reference shape only.
+  Do NOT copy photographic rendering from any reference.
+
+# ── A7. 얼굴 기본 [MUST] (has_human: true) ──
+face_must: "Character face: small round dot eyes + expressive mouth, NO nose."
+
+# ── A8. 배경 기본 [MUST] ──
+background_must: "Bare white canvas background — no colored fills, gradients, or tints on empty areas."
+
+# ═══════════════════════════════════════════════════════
+# B. ANCHOR Phase 1 레퍼런스 이미지용 (STEP 05)
+# ═══════════════════════════════════════════════════════
+
+# 안티-텍스트 (Phase 1 프롬프트 첫 줄)
+anchor_anti_text: >-
+  Generate ONLY pure visual artwork. Zero text, zero words,
+  zero letters, zero arrows, zero annotations anywhere in the image.
+  Zero panel borders, zero dividing lines, zero grid lines,
+  zero corner marks, zero frames of any kind anywhere in the image.
+
+# 캔버스 배경 (Phase 1 전용 — 씬과 다름)
+anchor_canvas: "Pure solid white background (#FFFFFF)."
+
+# 스타일 블록 — costume/character_prop용 (얼굴 포함)
+anchor_body_style: >-
+  Simple cartoon face with small round dot eyes and a small
+  expressive mouth. Scribbly, hand-drawn doodle with transparent,
+  messy watercolor wash. Whimsical and heartwarming. Limited color
+  palette — 1 to 3 muted pastel tones in lavender and peach,
+  carelessly bleeding outside the lines, paper white showing
+  through.
+
+# 스타일 블록 — prop용 (얼굴 없음)
+anchor_prop_style: >-
+  Scribbly, hand-drawn doodle with transparent, messy watercolor
+  wash. Whimsical and heartwarming. Limited color palette — 1 to 3
+  muted pastel tones in lavender and peach, carelessly bleeding
+  outside the lines, paper white showing through.
+
+# ═══════════════════════════════════════════════════════
+# C. 최소 색 규칙 (Minimal Color — v2 완화)
+# ═══════════════════════════════════════════════════════
+
+# 장면당 최대 색 수
+max_colors_per_scene: 5
+
+# 캐릭터 채색 규칙
+character_coloring:
+  max_colored_spots: 2
+  description: >-
+    캐릭터 채색은 최대 2곳 허용 (예: 목도리 + 모자, 또는 앞치마 + 소품 상호작용).
+    나머지 몸체·팔다리·얼굴은 순수 잉크 라인워크 — 색 없음.
+  body_rule: "pure ink linework, NO color fill on body"
+  allowed_spot_examples:
+    - "neckerchief/scarf — single muted sage-green wash"
+    - "hat/cap — single muted color wash"
+    - "apron/costume accent — single muted color wash"
+    - "key narrative prop in hand — single muted color wash"
+
+# 소품 채색 규칙
+prop_coloring:
+  description: >-
+    서사적으로 중요한 소품 최대 2개에 단일 색 허용.
+    나머지 소품·환경선은 전부 잉크 라인만.
+
+# ═══════════════════════════════════════════════════════
+# D. 금지 사항 (전역)
+# ═══════════════════════════════════════════════════════
+
+prohibited_everywhere:
+  - "hex codes (#FFFFFF, #2D2D20 등) — anchor_canvas 제외"
+  - "quality suffixes (4K, HD, masterpiece)"
+  - "스타일 표현의 [SCENE] 내 과도한 반복 (style_anchor 1회 삽입으로 충분)"
+  - "캐릭터 몸체 전체에 lavender/peach 워시 적용"
+
+# 금지 키워드 (flow_prompt [SCENE] 내에서 과잉 스타일링 방지)
+style_isolation_banned_in_scene:
+  - "charcoal fill"
+  - "solid fill"
+  - "dark fill"
+  - "dense shadow"
+  - "ink silhouette (렌더링 의미)"
+  - "flat ink"
+  - "watercolor wash pooling"
+  - "dense cross-hatch"
+  - "heavy pencil"
+
+# ═══════════════════════════════════════════════════════
+# E. v3 한국어 서술형 빌딩 블록 (flow_prompt v3)
+# ═══════════════════════════════════════════════════════
+
+# ── E1. 과제 소개 (P1 단락 — 모든 Shot 공통) ──
+# v3 간소화: style_ref가 첨부되므로 "THIS style의 드로잉 스타일로" 사용
+v3_task_intro: >-
+  THIS style의 드로잉 스타일로, 유튜브 교육 영상에 사용할
+  서사적인 삽화 한 장을 그려줘.
+
+# ── E2. 스타일 묘사 — ⚠️ 폐기 (style_ref 이미지가 대체) ──
+# style_ref가 content 배열 맨 앞에 첨부되므로 텍스트 스타일 묘사 불필요.
+# Phase 1 (ANCHOR 생성) 등 style_ref 없는 경우에만 레거시 참고.
+v3_style_description: >-
+  Scribbly, hand-drawn doodle with transparent, messy watercolor wash.
+  Whimsical and heartwarming. 음영은 성긴 낙서 같은 해칭으로 듬성듬성 가볍게.
+  짙은 음영이나 굵은 윤곽선 없이, 따뜻하고 순수한 분위기를 유지해줘.
+
+# ── E3. 배경 — 순백 (P2 단락 후반부, 모든 Shot 공통) ──
+v3_background_bare: >-
+  배경은 아무런 색이나 질감이 없는 순백의 빈 공간으로 남겨둬.
+
+# ── E4. 배경 변형 (creative_intent [공간]에 따라 선택) ──
+v3_background_variants:
+  horizon: "배경은 순백의 빈 공간이되, 하단 1/3 지점에 희미한 수평선 하나만 있어."
+  floor: "배경은 순백의 빈 공간이되, 바닥 부분에 연필 자국 몇 개로 바닥면을 암시해줘."
+  shadow: "배경은 순백의 빈 공간이되, 캐릭터 아래에 대각선 해칭 자국 두세 개로 그림자를 살짝 암시해줘."
+  ink_structure: "배경은 순백의 빈 공간이되, 얇은 잉크 윤곽선으로 {description}을 그려줘. 채색이나 디테일은 없이 구조만 암시해."
+
+# ── E5. 얼굴 규칙 — ⚠️ 폐기 (턴어라운드 시트가 담당) ──
+# 캐릭터 턴어라운드 시트에 얼굴이 포함되어 있으므로 텍스트 규칙 불필요.
+# Phase 1 (ANCHOR 생성) 등 ref 없는 경우에만 레거시 참고.
+v3_face_rule: >-
+  캐릭터 얼굴은 코 없이, 작은 점 형태의 눈과 표현력 있는 입으로만 그려줘.
+
+# ── E6. REDRAW 규칙 — ⚠️ 폐기 (THIS {name} 라벨이 대체) ──
+# "THIS {name} — 이 대상의 형태만 따라 그려줘:" 라벨이 REDRAW 역할 수행.
+# Phase 1 (ANCHOR 생성) 등 라벨 없는 경우에만 레거시 참고.
+v3_redraw_rule: >-
+  {서수} 이미지의 외형을 유지하되, scribbly한 손낙서 선으로 재해석해줘.
+
+# ── E7. 색 계획 템플릿 (P5 단락) ──
+v3_color_rule_template: >-
+  전체적으로는 흑백의 잉크 선으로만 묘사하고, 오직 {채색_대상}에만
+  {색상} 워시 채색을 살짝 입혀줘.
+
+# ── E8. 단일 장면 가드 — ⚠️ 폐기 (구도 묘사에서 장면이 명시됨) ──
+# P3 구도 묘사에서 단일 장면이 자연스럽게 묘사되므로 별도 가드 불필요.
+v3_single_scene_guard: >-
+  하나의 장면만 그려줘.
+
+# ── E9. 카운트 제약 템플릿 — ⚠️ 폐기 (구도 묘사에서 요소가 명시됨) ──
+# P3 구도 묘사에서 THIS {name} 참조로 요소가 명시되므로 별도 카운트 불필요.
+v3_count_template: >-
+  정확히 {카운트_내용}만 그려줘.
+
+# ── E10. 배경 밀도 등급 (Background Density Level L0~L5) ──
+# shot-composer가 [공간]에 등급을 지정하면 visual-director가 해당 서술을 사용한다.
+# 잉크 무게 계층: 캐릭터(1.0x) > 소품(0.7x) > 배경(등급별 0.25~0.7x)
+v3_background_density:
+  L0:  # bare — 잉크 밀도 0%
+    label: bare
+    description: "순백. 아무것도 없음"
+    prompt: "배경은 아무런 색이나 질감이 없는 순백의 빈 공간으로 남겨둬."
+    ink_weight: 0
+    suited_for: ["AWE", "ISOLATED"]
+  L1:  # trace — 잉크 밀도 ~2%
+    label: trace
+    description: "단일 힌트: 수평선/바닥자국/그림자"
+    prompt: "배경은 순백의 빈 공간이되, {hint}만 희미하게 있어."
+    ink_weight: 0.25
+    suited_for: ["REFLECTIVE"]
+    hint_examples:
+      - "하단 1/3 지점에 가느다란 수평선 하나"
+      - "바닥 부분에 연필 자국 몇 개로 바닥면을 암시"
+      - "캐릭터 아래에 대각선 해칭 자국 두세 개로 그림자를 살짝 암시"
+  L2:  # whisper — 잉크 밀도 ~5%
+    label: whisper
+    description: "환경 편린 2-3개 (풀잎+바닥선 등)"
+    prompt: >-
+      배경은 순백의 빈 공간이되, {환경편린들}이 희미한 잉크 자국으로
+      살짝 암시되어 있어. 배경 선은 캐릭터 선보다 확실히 연하고 가늘게 그려줘.
+    ink_weight: 0.35
+    suited_for: ["HUMOR", "REFLECTIVE"]
+  L3:  # sketch — 잉크 밀도 ~10%
+    label: sketch
+    description: "단일 구조물 윤곽 (문틀, 나무 등)"
+    prompt: >-
+      배경은 순백의 빈 공간이되, {구조물}이 얇고 연한 잉크 윤곽선으로만
+      그려져 있어 — 채색이나 세부 디테일 없이 구조만 암시하는 수준이야.
+      구조물 외의 빈 공간은 반드시 순백으로 남겨줘 — 해칭이나 워시로 빈 영역을 채우지 마.
+      배경 선은 캐릭터 선보다 확실히 연하고 가늘게 그려줘.
+    ink_weight: 0.5
+    suited_for: ["TENSION", "REVEAL"]
+  L4:  # scene — 잉크 밀도 ~15%
+    label: scene
+    description: "다중 구조물 (방 윤곽+가구 암시)"
+    prompt: >-
+      배경은 순백의 빈 공간이되, {구조물들}이 얇고 연한 잉크 윤곽선으로 그려져 있어.
+      가까운 구조물은 약간 굵은 선으로, 먼 구조물은 더 가늘고 흐린 선으로
+      깊이감을 표현해줘. 채색이나 세부 디테일 없이 구조만 암시하는 수준이야.
+      구조물 외의 빈 공간은 반드시 순백으로 남겨줘 — 해칭이나 워시로 빈 영역을 채우지 마.
+      배경 선은 캐릭터 선보다 반드시 연하고 가늘게.
+    ink_weight: 0.6
+    suited_for: ["TENSION", "REVEAL"]
+  L5:  # panorama — 잉크 밀도 ~18%
+    label: panorama
+    description: "풍경 스케치 (지평선+건물군+깊이감)"
+    prompt: >-
+      배경은 순백의 빈 공간이되, {풍경요소}이 잉크 윤곽선으로 펼쳐져 있어.
+      원경은 극도로 가늘고 흐린 선으로, 중경은 약간 뚜렷한 선으로,
+      근경 구조물은 캐릭터 선보다는 연하지만 비교적 또렷한 선으로
+      3단계 깊이감을 표현해줘. 채색 없이 잉크 라인만으로 공간을 구성해.
+      구조물 외의 빈 공간은 반드시 순백으로 남겨줘.
+    ink_weight: 0.7
+    suited_for: ["AWE", "TENSION"]
+
+# ── E11. 감정 뉘앙스 통합 연출표 (Unified Emotion Direction Table) ──
+# emotion_tag(5종) → emotion_nuance(15종) → 7차원 동시 가이드
+# 각 뉘앙스 하나가 캐릭터·배경·소품·카메라·색을 관통하는 톤을 결정한다.
+# 권장이지 강제가 아님. 재정의 시 7차원 톤 일관성 유지 의무.
+v3_emotion_direction:
+  HUMOR:
+    sardonic:
+      face: "비스듬 기울기, 눈썹 한쪽 치켜올림"
+      upper_body: "어깨 한쪽 들어올림, 몸 비스듬히"
+      gesture: "소품 가볍게 가리킴"
+      bg_density: L1
+      prop_relation: "소품 동등 크기, 가볍게 가리킴"
+      camera: "정면 WS, 약간 오프센터"
+      color_point: "의상 1곳, muted sage"
+    slapstick:
+      face: "입 오벌, 눈 동그랗게"
+      upper_body: "상체 스프링 튀어오름"
+      gesture: "양팔 벌려 허우적"
+      bg_density: L2
+      prop_relation: "소품 3배+ 과대, 캐릭터 압도"
+      camera: "로우앵글 XWS"
+      color_point: "소품에 warm peach"
+    wry:
+      face: "반쪽 미소, 시선 아래"
+      upper_body: "어깨 늘어짐, 축 처짐"
+      gesture: "소품 내려다봄"
+      bg_density: L0
+      prop_relation: "소품 0.5배 소형, 내려다봄"
+      camera: "하이앵글 WS"
+      color_point: "채색 최소, 연한 grey wash"
+
+  REFLECTIVE:
+    contemplative:
+      face: "시선을 아래로 떨구고 입을 조용히 다문"
+      upper_body: "S-curve, 등 살짝 굽어짐"
+      gesture: "소품 작고 멀리, 여백 극대화"
+      bg_density: L0
+      prop_relation: "소품 작고 멀리, 여백 극대화"
+      camera: "하이앵글 XWS"
+      color_point: "의상 1곳, soft lavender"
+    melancholy:
+      face: "시선 아래, 입꼬리 살짝 내려간"
+      upper_body: "C-curve 하강, 축 처진 어깨"
+      gesture: "소품 쥐고 있으나 힘 빠짐"
+      bg_density: "L1 (수평선)"
+      prop_relation: "소품 쥐고 있으나 힘 빠짐"
+      camera: "측면 WS"
+      color_point: "소품에 faded blue"
+    serene:
+      face: "눈 부드럽게 감김, 입 살짝 미소"
+      upper_body: "등 곧게, 안정적"
+      gesture: "소품과 조화로운 거리"
+      bg_density: "L1 (바닥선)"
+      prop_relation: "소품과 조화로운 거리"
+      camera: "정면 WS, 대칭 허용"
+      color_point: "warm cream 한 점"
+
+  AWE:
+    overwhelming:
+      face: "눈이 동그랗게 커지고 입이 살짝 벌어진 채"
+      upper_body: "뒤로 젖힘, 팔 비율+20%"
+      gesture: "거대한 것에서 뒤로 물러남"
+      bg_density: "L3~L4 (구조물)"
+      prop_relation: "소품 5배+, 위에서 내려누름"
+      camera: "익스트림 로우앵글"
+      color_point: "소품에 deep amber"
+    sublime:
+      face: "눈 위로 올려다봄, 입 살짝 벌어짐"
+      upper_body: "수직 직립, 고개 위로"
+      gesture: "소품 없거나 극소, 여백 주인공"
+      bg_density: "L0 (광활)"
+      prop_relation: "소품 없거나 극소, 여백 주인공"
+      camera: "XXWS, 탑다운"
+      color_point: "채색 없음, 순수 잉크"
+    wonder:
+      face: "눈 반짝이듯 크게, 입 벌어짐"
+      upper_body: "앞으로 기울기"
+      gesture: "팔 쭈욱 뻗어 소품에 가까이"
+      bg_density: L2
+      prop_relation: "소품에 가까이, 동등~1.5배"
+      camera: "WS, 약간 로우앵글"
+      color_point: "소품에 warm gold"
+
+  REVEAL:
+    eureka:
+      face: "눈 크게 떠지고 입이 벌어진"
+      upper_body: "상체 스프링 상승"
+      gesture: "소품 돌연 명확, 크기 변화"
+      bg_density: "L0~L1"
+      prop_relation: "소품 돌연 명확, 크기 변화"
+      camera: "정면 WS→MCU 전환"
+      color_point: "소품에 bright accent"
+    shock:
+      face: "눈 크게 뜨고 입 벌어짐"
+      upper_body: "뒤로 꺾임"
+      gesture: "소품에서 멀어짐, 거리 벌어짐"
+      bg_density: "L2~L3"
+      prop_relation: "소품에서 멀어짐, 거리 벌어짐"
+      camera: "Dutch angle"
+      color_point: "cool blue 한 점"
+    ironic:
+      face: "고개 갸우뚱, 반쪽 미소"
+      upper_body: "한쪽으로 살짝 기울기"
+      gesture: "소품 2개 대비/병치"
+      bg_density: L1
+      prop_relation: "소품 2개 대비/병치"
+      camera: "정면 XWS"
+      color_point: "소품 각각 대조색"
+
+  TENSION:
+    dread:
+      face: "눈을 가늘게 좁히고 이마에 주름을 잡은"
+      upper_body: "목 움츠림, 어깨 귀까지"
+      gesture: "소품이 그림자/위협으로 다가옴"
+      bg_density: "L3 (닫힌 공간)"
+      prop_relation: "소품이 그림자/위협으로 다가옴"
+      camera: "Dutch angle, 로우앵글"
+      color_point: "그림자에 dark wash"
+    pressure:
+      face: "이마 주름, 눈 찌푸림"
+      upper_body: "몸 찌그러짐, 아래로 압축"
+      gesture: "소품이 위에서 내려누름"
+      bg_density: "L4 (천장 압박)"
+      prop_relation: "소품이 위에서 내려누름, 5배+"
+      camera: "하이앵글, 틸트"
+      color_point: "채색 최소, 억압적"
+    defiant:
+      face: "눈 부릅뜸, 입 꽉 다문"
+      upper_body: "앞으로 기울어 맞섬"
+      gesture: "주먹, 소품과 정면 대치"
+      bg_density: L2
+      prop_relation: "소품과 정면 대치, 동등 크기"
+      camera: "로우앵글 WS"
+      color_point: "의상에 bold red accent"
+
+# 뉘앙스 미기재 시 기본값 (첫 번째 뉘앙스 = nuance_a)
+v3_emotion_nuance_defaults:
+  HUMOR: sardonic
+  REFLECTIVE: contemplative
+  AWE: overwhelming
+  REVEAL: eureka
+  TENSION: dread
+
+# 레거시 호환: 기존 표정 전용 매핑 (v3_emotion_expressions 대체)
+# 하위 호환을 위해 유지 — 새 프로젝트는 v3_emotion_direction 사용
+v3_emotion_expressions:
+  REVEAL: "눈이 크게 떠지고 입이 벌어진 채 뒤로 살짝 물러서는"
+  REFLECTIVE: "시선을 아래로 떨구고 입을 조용히 다문 채 가만히 있는"
+  HUMOR: "한쪽 눈썹을 치켜올리고 입꼬리가 비스듬히 올라간"
+  AWE: "눈이 동그랗게 커지고 입이 살짝 벌어진 채 멈춰 있는"
+  TENSION: "눈을 가늘게 좁히고 이마에 주름을 잡은 채 어깨를 잔뜩 움츠린"
+
+# ── E12. Bean 제스처 양성 어휘 (v3_bean_gesture_vocabulary) ──
+# creative_intent [감정선]에 "할 수 있는 것"을 정의한다.
+# 감정 과장형 표현 포함 (disney-principles 원칙 10 참조).
+v3_bean_gesture_vocabulary:
+  head:
+    - "고개 갸우뚱 (한쪽 기울기)"
+    - "고개 푹 숙임"
+    - "고개 뒤로 젖힘"
+    - "한쪽 돌려 시선 회피"
+    - "목 움츠림 (어깨 속으로 쏙)"
+    - "뒤돌아봄 (3/4 후면)"
+  torso:
+    - "앞으로 기울어짐 (호기심)"
+    - "뒤로 젖힘 (놀람/경외)"
+    - "S-curve (여유/사색)"
+    - "C-curve 하강 (피로/슬픔)"
+    - "상체 스프링 상승 (발견/환희)"
+    - "몸통 찌그러짐 (압박)"
+    - "한쪽으로 비스듬히 (냉소)"
+  arms:
+    - "한 팔 뻗어 가리킴"
+    - "양팔 벌려 허우적"
+    - "팔짱 (방어/냉소)"
+    - "주먹 쥠 (분노/결의)"
+    - "팔 쭈욱 뻗음 (±20%, 경탄)"
+    - "소품 쥐기 (관계 표현)"
+    - "손바닥 벌림 (무력함)"
+    - "뒤에서 깍지 (사색)"
+  weight:
+    - "한 발에 체중 (비대칭)"
+    - "양발 균등 (안정)"
+    - "발끝 들림 (기대감)"
+    - "쪼그려 앉음 (위축)"
+    - "점프 직전 (도약감)"
+
+# ── E13. 선 품질 빌딩 블록 (v3_line_character) ──
+# 스틸 시퀀스에서 선의 성격 변화가 서사를 전달한다.
+# shot-composer가 creative_intent에 선 품질을 지정하면
+# visual-director가 flow_prompt P2에 해당 서술을 통합한다.
+v3_line_character:
+  tremor:
+    label: "떨림 (수공예)"
+    prompt_insert: >-
+      가느다란 떨림이 느껴지는 잉크 선
+    suited_for: ["REFLECTIVE", "serene", "contemplative"]
+    narrative_meaning: "인간의 손, 수공예의 온기, 살아있는 선"
+  mechanical:
+    label: "균일 (기계적)"
+    prompt_insert: >-
+      정확하고 균일한 간격으로 반복되는 잉크 선
+    suited_for: ["TENSION", "pressure", "dread"]
+    narrative_meaning: "기계화, 반복, 인간성 상실"
+  fading:
+    label: "소멸 (흐려짐)"
+    prompt_insert: >-
+      가장자리가 흐려지며 사라져가는 듯한 잉크 선
+    suited_for: ["REFLECTIVE", "melancholy"]
+    narrative_meaning: "상실, 기억의 희미함, 소멸"
+  incomplete:
+    label: "미완성 (그리다 만)"
+    prompt_insert: >-
+      형태가 반쯤만 그려진 듯 끊기고 비어있는 잉크 선
+    suited_for: ["REVEAL", "TENSION"]
+    narrative_meaning: "과정 중, 미완의 변화, 가능성"
+  restored:
+    label: "회복 (다시 떨리는)"
+    prompt_insert: >-
+      한때 균일했던 선이 다시 미세한 떨림을 되찾은 잉크 선
+    suited_for: ["REVEAL", "eureka", "REFLECTIVE"]
+    narrative_meaning: "인간성 회복, 질문의 힘, 되찾은 자유"

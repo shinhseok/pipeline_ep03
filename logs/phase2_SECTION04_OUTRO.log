@@ -1,0 +1,14 @@
+
+🚀 generate_images.py 시작 (Project: CH02, Phase: 2)
+   > 매니페스트 모드 (Run: run001)
+   > 병렬 처리: --workers 2
+
+📄 shot44.md
+
+📄 shot45.md
+   > 사용 모델: gemini-3.1-flash-image-preview
+   [Shot 44] 이미 존재 → 스킵 (09_assets/images/run001/shot44.png)
+   > 사용 모델: gemini-3.1-flash-image-preview
+   [Shot 45] 이미 존재 → 스킵 (09_assets/images/run001/shot45.png)
+
+✅ 완료 — 생성: 0개 / 스킵: 2개

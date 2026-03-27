@@ -1,0 +1,58 @@
+
+🚀 generate_images.py 시작 (Project: CH02, Phase: 2)
+   > 매니페스트 모드 (Run: run001)
+   > 병렬 처리: --workers 2
+
+📄 shot07.md
+
+📄 shot08.md
+   > 사용 모델: gemini-3.1-flash-image-preview
+   > 사용 모델: gemini-3.1-flash-image-preview
+   [Shot 7] 이미 존재 → 스킵 (09_assets/images/run001/shot07.png)
+
+📄 shot09.md
+   [Shot 8] 이미 존재 → 스킵 (09_assets/images/run001/shot08.png)
+
+📄 shot10.md
+   > 사용 모델: gemini-3.1-flash-image-preview
+   [Shot 9] 이미 존재 → 스킵 (09_assets/images/run001/shot09.png)
+
+📄 shot11.md
+   > 사용 모델: gemini-3.1-flash-image-preview
+   [Shot 10] 이미 존재 → 스킵 (09_assets/images/run001/shot10.png)
+
+📄 shot12.md
+   > 사용 모델: gemini-3.1-flash-image-preview
+   [Shot 11] 이미 존재 → 스킵 (09_assets/images/run001/shot11.png)
+
+📄 shot13.md
+   > 사용 모델: gemini-3.1-flash-image-preview
+   [Shot 12] 이미 존재 → 스킵 (09_assets/images/run001/shot12.png)
+
+📄 shot14.md
+   > 사용 모델: gemini-3.1-flash-image-preview
+   > 사용 모델: gemini-3.1-flash-image-preview
+   [Shot 13] 이미 존재 → 스킵 (09_assets/images/run001/shot13.png)
+
+📄 shot15.md
+   [Shot 14] 이미 존재 → 스킵 (09_assets/images/run001/shot14.png)
+
+📄 shot16.md
+   > 사용 모델: gemini-3.1-flash-image-preview
+   > 사용 모델: gemini-3.1-flash-image-preview
+   [Shot 16] 이미 존재 → 스킵 (09_assets/images/run001/shot16.png)
+
+📄 shot17.md
+   [Shot 15] 이미 존재 → 스킵 (09_assets/images/run001/shot15.png)
+
+📄 shot18.md
+   > 사용 모델: gemini-3.1-flash-image-preview
+   [Shot 17] 이미 존재 → 스킵 (09_assets/images/run001/shot17.png)
+
+📄 shot19.md
+   > 사용 모델: gemini-3.1-flash-image-preview
+   [Shot 18] 이미 존재 → 스킵 (09_assets/images/run001/shot18.png)
+   > 사용 모델: gemini-3.1-flash-image-preview
+   [Shot 19] 이미 존재 → 스킵 (09_assets/images/run001/shot19.png)
+
+✅ 완료 — 생성: 0개 / 스킵: 13개
