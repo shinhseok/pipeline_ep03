@@ -232,12 +232,14 @@ narration_map의 각 행(local_id 순)을 Shot으로 변환한다.
   - `breath` 유형: creative_intent에 "이전 Shot 감정 여운 지속" 명시
 → ⑦ 실루엣 테스트 통과 확인
 → ⑧ prop_refs / costume_refs 기재
-    - 해빛 직접 등장: costume_refs: [main]
-    - 역사 인물 변장: 해당 costume_ref
+    - 기본 해빛 등장 (변장 없음): costume_refs: []
+    - 변장 등장: costume_refs: [해당 costume명] (예: [stephenson])
     - 그림자·실루엣 전용: costume_refs: []
+    ⚠️ costume_refs: [] = 기본 해빛 (정상). 변장이 있을 때만 변장명 기재.
+       has_human 값이 ref_images 캐릭터 소스를 결정하는 유일한 키.
 → ⑨ has_human 초기 추정 (3값):
-    - 해빛/변장 캐릭터 전신 등장 → `main` + costume_refs 필수
-    - 명명된 학자/역사인물이 직접 등장 → `main` + costume_refs 필수
+    - 해빛/변장 캐릭터 전신 등장 → `main`
+    - 명명된 학자/역사인물이 직접 등장 → `main`
     - 특정 캐릭터의 손/팔/실루엣 등장 → `main`
     - **인체 형태가 인식 가능한 모든 익명 존재** → `anonym`
       (예: 익명 실루엣, 군중, 아이 실루엣, 익명의 손/팔, 신체 일부)
@@ -249,21 +251,28 @@ narration_map의 각 행(local_id 순)을 Shot으로 변환한다.
     - ANCHOR Layer 1+2+3에 해당 인물 등록 후 진행
 → ⑩ YAML 블록 작성
 → ⑩.5 Self-Reflection (저장 전 필수)
-    ☐ SR-1: costume_refs ↔ creative_intent 교차 검증
-    ☐ SR-2: has_human ↔ creative_intent 교차 검증 (main/anonym/none 3값 — 특정 캐릭터면 main, 익명이면 anonym)
-          ⚠️ creative_intent에 "실루엣/아이/손/군중/사람" 키워드가 있는데 has_human: none이면 → 즉시 anonym으로 수정
-    ☐ SR-3: 복수 캐릭터/포즈 → 정확한 수량 명시
-    ☐ SR-4: 이전 Shot 시각 연속성 명시
-    ☐ SR-5: 물리적 방향 명확성
-    ☐ SR-6: narration_span, scene_type, emotion_tag가 narration_map과 동일한가
-    ☐ SR-7: 02_planning 내러티브 구조와 emotion_tag 분포가 호응하는가
-    ☐ SR-8: 비주얼 모티프가 Section 전체에 걸쳐 변형·순환되는가
-    ☐ SR-9: 키 비주얼 Shot의 creative_intent가 특히 정교하게 설계되었는가
-    ☐ SR-10: NB2 시각화 원칙 준수 — 금지어(faint, ghost, afterimage) 없음, 모든 요소 ≥10% 점유
-    ☐ SR-11: 변환/인과 관계 → 공간 배치 기법(병치·크기 대비·시각 경로·흔적) 사용
-    ☐ SR-12: [감정선]에 구체적 표정 묘사 포함 (TENSION→좁힌 눈+다문 입 등)
-    ☐ SR-13: 구도 아키타입이 [카메라]에 명시됨 (VAST/OPPRESSIVE/INTIMATE/ISOLATED/JUXTAPOSE/PANORAMIC)
-→ ⑪ 카메라 거리·구도·line_of_action 변화 확인 (3연속 금지)
+
+    === 그룹 A: 필수 정합성 (위반 시 저장 불가) ===
+    ☐ A-1: has_human ↔ creative_intent 일치
+           - 특정 캐릭터 등장 → main
+           - 신체 키워드(실루엣/군중/손/사람) → anonym (none 금지)
+           - 소품/환경만 → none
+    ☐ A-2: narration_span, scene_type, emotion_tag가 narration_map과 동일한가 (변경 금지)
+    ☐ A-3: NB2 금지어 없음 (faint, ghost, afterimage, 4k, masterpiece, HD)
+
+    === 그룹 B: 연출 품질 (위반 시 경고, 진행 가능) ===
+    ☐ B-1: 이전 Shot과 시각 연속성 명시 ([이전샷] 태그)
+    ☐ B-2: 동일 카메라/구도/emotion_nuance/pose_archetype 연속 한도 미초과
+    ☐ B-3: [감정선]에 구체적 표정 묘사 포함
+    ☐ B-4: 변환/인과 관계 → 공간 배치 기법 사용
+
+    === 그룹 C: 전체 밸런스 (섹션 완료 후 1회) ===
+    ☐ C-1: 02_planning 내러티브 구조와 emotion_tag 분포 호응
+    ☐ C-2: 비주얼 모티프 변형·순환
+    ☐ C-3: 키 비주얼 Shot 정교성
+    ☐ C-4: 복수 캐릭터/포즈 수량 명시
+
+→ ⑪ 카메라 거리·구도·line_of_action 변화 확인 (그룹 B-2에서도 커버)
 
 각 Shot 파일 즉시 저장: 04_shot_composition/{RUN_ID}/{SECTION}/shot{shot_id:02d}.md
 

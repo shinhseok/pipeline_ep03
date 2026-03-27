@@ -36,9 +36,18 @@
 - `props/run001/compass.jpeg`
 - `ai_robot.jpeg` (reference/ 직접)
 
-**채널 공통 턴어라운드 시트** (ref_images에 직접 포함하지 않음 — generate_images.py가 자동 첨부):
-- `assets/reference/style/main_turnaround.jpeg` — costume_refs 없고 has_human:main 시 자동
-- `assets/reference/style/crowd_turnaround.jpeg` — 군중 Shot 시 자동
+**has_human 기반 ref_images 구성 규칙 (visual-director 완전 책임)**:
+
+| has_human | costume_refs | ref_images에 포함할 항목 |
+|-----------|-------------|-------------------------|
+| main | `[]` (기본 해빛) | style_ref + main_turnaround + prop_refs |
+| main | `[변장명]` | style_ref + characters/{RUN_ID}/{변장명}.jpeg + prop_refs |
+| anonym | `[]` | style_ref + character_reference + prop_refs |
+| none | - | style_ref + prop_refs (캐릭터 ref 없음) |
+
+⚠️ **style_ref**는 모든 shot의 ref_images 첫 항목으로 포함 필수.
+⚠️ **has_human: main이면 ref_images에 캐릭터 ref 1개 이상** 필수.
+⚠️ **generate_images.py는 ref_images를 그대로 전달** — 추가/제거 없음.
 
 ---
 
@@ -347,8 +356,7 @@ P5 카운트 문장으로 해결:
 ✅ "THIS character_reference의 형태를 따른 실루엣 3개" — 기본 형태 참조
 ```
 
-> generate_images.py의 자동 첨부는 safety net으로만 유지.
-> **1차 책임은 visual-director가 ref_images + flow_prompt에서 명시하는 것.**
+> visual-director가 ref_images를 완전히 구성한다. generate_images.py는 추가/제거 없이 그대로 전달.
 
 ---
 

@@ -106,12 +106,12 @@ STEP 04 시작 시 NB-Pro(Gemini 3 Pro) vs NB2(Gemini 3.1 Flash) 중 1회 선택
 | `line_of_action` | 04 | enum | 에너지 라인 (S-curve, C-curve, 역C-curve 등 — pose-repertoire.md 참조) |
 | `silhouette_note` | 04 | string (optional) | 실루엣 판독성 메모 (예: "측면 실루엣, 한 손 가리킴") |
 | `prop_refs` | 04 | list | ANCHOR 소품명 |
-| `costume_refs` | 04 | list | ANCHOR 변장명 |
+| `costume_refs` | 04 | list | ANCHOR 변장명. 빈 배열 = 기본 해빛 (정상). 변장 시만 기재 (예: [stephenson]) |
 | `secondary_chars` | 04 | list | 보조 인물명 리스트 |
-| `has_human` | 04→05 | enum | `main` / `anonym` / `none`. 05에서 최종 확정. main=특정 캐릭터 등장, anonym=익명 실루엣·군중, none=사람 형태 없음 |
-| `ref_images` | 05 | list | v3: 참조 이미지 경로 배열 (순서 = 서수 참조). v2에서는 미사용 |
-| `thinking_level` | 05 | enum | v3: `high` (기본) / `low`. v2에서는 flow_prompt 내 `[thinking:]` |
-| `flow_prompt` | 05 | text | v3: 순수 한국어 서술형 / v2: [SCENE] + [MUST] 구조적 태그 |
+| `has_human` | 04→05 | enum | `main` / `anonym` / `none`. 05에서 최종 확정. ref_images 캐릭터 소스의 유일한 결정 키 |
+| `ref_images` | 05 | list | 참조 이미지 경로 배열 (순서 = 서수 참조). visual-director가 완전 구성. style_ref + 캐릭터 ref + 소품 ref 모두 포함 |
+| `thinking_level` | 05 | enum | `high` (기본) / `low` |
+| `flow_prompt` | 05 | text | 순수 한국어 서술형 4단락 |
 | `iv_prompt` | 05 | text | Veo 3 I2V 프롬프트 |
 | `scene_id` | 06 | int | 나레이션 Scene 그룹 |
 | `el_narration` | 06 | text | Audio Tag 포함 |

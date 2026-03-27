@@ -48,13 +48,16 @@ flow_prompt에서 **THIS {name}**으로 참조 (서수 참조 폐기).
 **has_human별 캐릭터 ref:**
 | has_human | 캐릭터 참조 이미지 |
 |-----------|------------------|
-| `main` (costume_refs 있음) | `characters/{RUN_ID}/{인물명}.jpeg` |
-| `main` (costume_refs 없음) | `assets/reference/style/main_turnaround.jpeg` (ref_images에 명시적 포함) |
+| `main` + `costume_refs: [변장명]` | `characters/{RUN_ID}/{변장명}.jpeg` |
+| `main` + `costume_refs: []` (기본 해빛) | `assets/reference/style/main_turnaround.jpeg` |
 | `anonym` | `assets/reference/style/character_reference.jpeg` (기본 형태 참조 — ref_images에 명시적 포함) |
 | `none` | 캐릭터 ref 없음 |
 
-> `main_turnaround.jpeg` (채널 공통)는 generate_images.py가 자동 첨부 — ref_images에 기재 불필요.
-> **최대 4개 권장** — 이미지가 많으면 NB2 해석이 분산됨.
+> visual-director가 ref_images를 완전히 구성한다. style_ref, main_turnaround, character_reference 등
+> 모든 참조를 명시적으로 포함해야 한다. generate_images.py는 추가/제거 없이 그대로 전달한다.
+> **최대 5개 권장 (style_ref 포함)** — 이미지가 많으면 NB2 해석이 분산됨.
+> ref 3개 이상 시 flow_prompt P1에 스타일 전이 방지 문구 포함:
+> "여러 참조 이미지가 첨부되어 있어. 모든 요소에 동일한 THIS style의 드로잉 스타일을 유지해줘."
 
 **경로**: `09_assets/reference/` 기준 상대 경로 (접두사 금지).
 

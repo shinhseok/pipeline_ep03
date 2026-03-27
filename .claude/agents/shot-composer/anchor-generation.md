@@ -163,7 +163,7 @@ Phase 1 생성 대상에서 자동 제외되며, 씬 이미지 생성 시 자동
 
 | 에셋 | 경로 | 용도 |
 |------|------|------|
-| 메인 캐릭터 (넥커치프) | `assets/reference/style/main_turnaround.jpeg` | `costume_refs: [main]` Shot에 자동 첨부 |
+| 메인 캐릭터 (넥커치프) | `assets/reference/style/main_turnaround.jpeg` | `has_human: main` + `costume_refs: []` Shot에 visual-director가 ref_images에 포함 |
 | 군중 캐릭터 (익명) | `assets/reference/style/crowd_turnaround.jpeg` | `has_human: anonym` + 군중 Shot에 자동 첨부 |
 
 > 재생성 필요 시: `python scripts/generate_main_turnaround.py --overwrite --target main|crowd|all`

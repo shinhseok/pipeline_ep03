@@ -212,10 +212,25 @@ creative_intent: "기어를 올려다봄"
 
 1. Determine `has_human` (main/anonym/none) using the decision table in `field-rules.md`
 2. Select pattern from `flow-patterns.md` based on has_human value + 추가 조건 (secondary_chars, section, 밀도 등급)
-3. Build `ref_images` array from costume_refs + prop_refs (순서 = THIS {name} 대응)
-   - `main`: costume ref 또는 `characters/{RUN_ID}/main.jpeg`
-   - `anonym`: `character_reference.jpeg` (기본 형태 참조)
-   - `none`: 캐릭터 ref 없음
+3. Build `ref_images` array — **visual-director가 최종 목록을 완전히 구성한다.**
+   generate_images.py는 이 배열을 그대로 API에 전달하며, 추가/제거하지 않는다.
+
+   === 필수 포함 항목 ===
+   a) **style_ref**: ANCHOR ref_paths.style_ref — 모든 shot의 ref_images 첫 항목으로 포함
+   b) **캐릭터 ref** (has_human 기반):
+      - `main` + `costume_refs: []` (기본 해빛) → ANCHOR ref_paths.main_turnaround
+      - `main` + `costume_refs: [변장명]` → ANCHOR ref_paths.{변장명} (characters/ 경로)
+      - `anonym` → ANCHOR ref_paths.character_reference
+      - `none` → 캐릭터 ref 없음
+   c) **소품 ref**: prop_refs의 각 항목 → ANCHOR ref_paths에서 경로 조회
+   d) **character_prop ref**: ANCHOR character_prop 항목 → ref_paths에서 경로 조회
+
+   === 스타일 전이 방지 (ref 3개 이상 시) ===
+   flow_prompt P1에 다음 문구 포함:
+   "여러 참조 이미지가 첨부되어 있어. 모든 요소에 동일한 THIS style의
+    드로잉 스타일을 유지해줘. 참조 이미지의 렌더링 스타일을 혼합하지 마."
+
+   ⚠️ has_human: main이면 ref_images에 반드시 캐릭터 ref 1개 이상
 4. Write 4단락 한국어 서술문 (간소화 — ref가 외형/스타일/얼굴 담당):
    - **P1**: 과제 소개 — "THIS style의 드로잉 스타일로, ... 삽화 한 장을 그려줘. THIS style의 잉크 선 굵기, 여백 비율, 배경 톤을 정확히 따라줘."
    - **P2**: 배경 — 밀도 등급(L0~L5)에 따른 배경 서술
@@ -316,7 +331,11 @@ asset_path: 09_assets/images/{RUN_ID}/shot{shot_id:02d}.png
 After completing all sections:
 - [ ] Every shot in every section has a corresponding output file
 - [ ] All FLOW_MODEL headers match ANCHOR.md declaration
-- [ ] `ref_images` 배열이 모든 참조 Shot에 존재
+- [ ] `ref_images` 첫 항목이 style_reference.png인가 (모든 shot 필수)
+- [ ] has_human: main + costume_refs: [] → ref_images에 main_turnaround 포함
+- [ ] has_human: main + costume_refs: [변장명] → ref_images에 해당 costume ref 포함
+- [ ] has_human: anonym → ref_images에 character_reference 포함
+- [ ] generate_images.py에 의존하는 자동 첨부 없음 — ref_images가 최종 목록
 - [ ] `thinking_level` 필드가 모든 Shot에 존재
 - [ ] flow_prompt에 구조적 태그(`[SCENE]`, `[MUST]`, `[SOURCE REFERENCES]`, `[thinking:]`) 없음
 - [ ] flow_prompt에서 THIS {name} 참조가 ref_images 파일명 stem과 일치

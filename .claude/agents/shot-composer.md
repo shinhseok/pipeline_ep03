@@ -400,14 +400,12 @@ pose_archetype: {각 아키타입:N} | 최대 연속: {N} (≤2 ✅/❌)
 
 ## Self-Reflection
 
-> **상세 체크리스트 (SR-1~SR-13)**: `shot-composer/execution-flow.md` STEP ⑩.5 참조.
+> **상세 체크리스트 (3그룹)**: `shot-composer/execution-flow.md` STEP ⑩.5 참조.
 
 Shot 파일 저장 전 필수 검증:
-- [ ] SR-1~3: costume_refs·has_human·수량 교차 검증
-- [ ] SR-4~5: 시각 연속성·물리적 방향 명확성
-- [ ] SR-6: narration_span·scene_type·emotion_tag가 narration_map과 동일
-- [ ] SR-7~9: 내러티브 호응·비주얼 모티프 순환·키 비주얼 정교도
-- [ ] SR-10~13: NB2 시각화 원칙·공간 배치·감정선 표정·구도 아키타입
+- [ ] 그룹 A (필수 — 위반 시 저장 불가): A-1 has_human↔creative_intent 일치, A-2 narration_map 동일, A-3 NB2 금지어
+- [ ] 그룹 B (품질 — 위반 시 경고): B-1 시각 연속성, B-2 연속 한도, B-3 표정 묘사, B-4 공간 배치
+- [ ] 그룹 C (밸런스 — 섹션 완료 후 1회): C-1 planning 호응, C-2 모티프 순환, C-3 키 비주얼, C-4 수량 명시
 
 Report: "✅ Shot self-check: {SECTION} {N}개 Shot 완료" or list issues corrected.
 
@@ -437,7 +435,7 @@ Report: "✅ Shot self-check: {SECTION} {N}개 Shot 완료" or list issues corre
 - ❌ Visual Rhythm Check 누락
 - ❌ 동일 emotion_nuance 3연속
 - ❌ 동일 pose_archetype 2연속
-- ❌ creative_intent에 캐릭터 직접 등장인데 costume_refs 비어 있음
+- ❌ has_human 값이 creative_intent와 불일치 (캐릭터 등장인데 none, 신체 키워드인데 none 등)
 - ❌ creative_intent에 특정 캐릭터 등장인데 has_human이 main이 아님
 - ❌ creative_intent에 익명 실루엣/군중인데 has_human이 anonym이 아님
 - ❌ 복수 캐릭터/포즈 Shot에서 수량 미명시

@@ -22,15 +22,18 @@ Before saving each shot, verify all items:
 - [ ] **P4 색 계획 + 선 질감**: 채색 대상과 색상 명시 + "떨리는 손그림 느낌" 스케치 강조 문구 포함
 - [ ] has_human: none → P3에서 소품/환경 구도 묘사
 
-## C. has_human별 ref_images 검증
+## C. ref_images 완전성 검증
 
-- [ ] `main` + costume_refs 있음 → characters/ 경로 포함
-- [ ] `main` + costume_refs 없음 → `assets/reference/style/main_turnaround.jpeg` 명시적 포함
+- [ ] ref_images 첫 항목이 style_reference.png인가 (모든 shot 필수)
+- [ ] `main` + `costume_refs: []` → main_turnaround 포함
+- [ ] `main` + `costume_refs: [변장명]` → characters/{RUN_ID}/{변장명}.jpeg 포함
 - [ ] `main` + secondary_chars 직접 등장 → 캐릭터별 ref 각각 포함 + THIS {name} 구분
-- [ ] `anonym` → `assets/reference/style/character_reference.jpeg` 포함 + `THIS character_reference` 패턴 사용
-- [ ] `none` → 캐릭터 ref 없음
+- [ ] `anonym` → character_reference.jpeg 포함 + `THIS character_reference` 패턴 사용
+- [ ] `none` → 캐릭터 ref 없음 (style_ref + prop_refs만)
+- [ ] prop_refs의 모든 항목이 ref_images에 경로로 포함되어 있는가
 - [ ] character_prop → ref_images에 포함 (우선순위 1)
-- [ ] 최대 4개 이하 권장
+- [ ] ref_images 최대 5개 이하 (style_ref 포함)
+- [ ] generate_images.py에 의존하는 자동 첨부 없음 — ref_images가 최종 목록
 
 ## D. 신체 표현 규칙
 

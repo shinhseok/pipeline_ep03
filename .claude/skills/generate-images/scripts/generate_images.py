@@ -4,8 +4,7 @@ generate_images.py
 flow_prompt에서 레퍼런스 이미지를 파싱하고
 NB2 API(gemini-3.1-flash-image-preview)로 이미지를 생성합니다.
 
-v3 모드: ref_images YAML 필드에서 이미지 경로를 직접 읽음 (서수 참조)
-v2 모드: [SOURCE REFERENCES] 또는 (refer to: ...) 파싱 (하위 호환)
+ref_images YAML 필드에서 이미지 경로를 직접 읽음 (v3 서수 참조)
 
 실행 방법:
   python scripts/generate_images.py --project CH01 [--section HOOK] [--overwrite] [--shots 7,8,9]
@@ -55,68 +54,35 @@ except ImportError:
 #   basic_chareter_ref.png = 베이스 체형 (costume ref 없는 캐릭터용) → [BASE BODY REFERENCE], priority 2
 #   props/*.jpeg     = 소품 레퍼런스 → [OBJECT SOURCE], priority 3
 # ────────────────────────────────────────────────
-IMAGE_LABELS = {
-    "costume_ref": (
-        "[CHARACTER SOURCE — complete character reference] "
-        "This image shows this character's FULL appearance. "
-        "Reproduce body shape, costume design, colors, and proportions — all defined by this image. "
-        "The camera angle and pose are determined by the text prompt, not by this image. "
-        "REDRAW in loose ink sketch doodle style with CONSISTENT thin trembling lines — "
-        "do NOT copy the reference's line weight, rendering style, or background. "
-        "ALL elements must share the same delicate Sempé-inspired ink line quality. "
-        "Generate a single narrative scene — do NOT reproduce any multi-view or sheet layout:"
-    , 1),
-    "character_prop_ref": (
-        "[CHARACTER SOURCE — recurring character entity] "
-        "This is a recurring character (not a costume). "
-        "Reproduce its FULL appearance: shape, colors, features, and proportions — all defined by this image. "
-        "The camera angle and pose are determined by the text prompt, not by this image. "
-        "REDRAW in loose ink sketch doodle style with CONSISTENT thin trembling lines — "
-        "do NOT copy the reference's line weight, rendering style, or background. "
-        "ALL elements must share the same delicate Sempé-inspired ink line quality. "
-        "Generate a single narrative scene — do NOT reproduce any multi-view or sheet layout:"
-    , 1),
-    "basic_charater_ref": (
-        "[BASE BODY REFERENCE — bean body shape] "
-        "Use this ONLY for characters that have no [CHARACTER SOURCE] image. "
-        "Extract the bean-shaped body silhouette, proportions, and base body color. "
-        "When a [CHARACTER SOURCE] is present for a character, [CHARACTER SOURCE] takes priority "
-        "and this image is supplementary for body proportion only. "
-        "The camera angle and pose are determined by the text prompt, not by this image. "
-        "Generate a single narrative scene — do NOT reproduce any multi-view or sheet layout:"
-    , 2),
-    "character_ref": (
-        "[BASE BODY REFERENCE — bean body shape] "
-        "Use this ONLY for characters that have no [CHARACTER SOURCE] image. "
-        "Extract the bean-shaped body silhouette and proportions. "
-        "The camera angle and pose are determined by the text prompt, not by this image. "
-        "Generate a single narrative scene — do NOT reproduce any multi-view or sheet layout:"
-    , 2),
-    "prop_ref": (
-        "[OBJECT SOURCE — prop appearance] "
-        "Replicate this prop's shape and design details in loose ink sketch doodle style. "
-        "Do NOT apply this object's color, brightness, or visual style to the character's body — "
-        "the character's appearance is defined by the text prompt:"
-    , 3),
-}
-
 # ────────────────────────────────────────────────
 # v3 레퍼런스 이미지 라벨 (THIS {name} 네이밍 — 실험 확정)
 # ref_images YAML 배열 순서대로 API에 전달
 # {name}은 파일명 stem으로 자동 치환 (예: artisan.jpeg → THIS artisan)
 # ────────────────────────────────────────────────
 V3_IMAGE_LABELS = {
+    "style_reference": (
+        "THIS style — 이 이미지의 드로잉 스타일(선의 질감, 음영, 채색 기법)로 장면 전체를 그려줘:"
+    , 0),
     "costume_ref": (
         "THIS {name} — 이 대상의 형태만 따라 그려줘:"
     , 1),
     "character_prop_ref": (
         "THIS {name} — 이 대상의 형태만 따라 그려줘:"
     , 1),
+    "main_turnaround": (
+        "THIS main — 이 캐릭터의 체형과 비율을 따라 그려줘:"
+    , 1),
+    "crowd_turnaround": (
+        "THIS crowd — 이 익명 캐릭터의 체형을 따라 그려줘:"
+    , 2),
     "basic_charater_ref": (
         "THIS {name} — 이 대상의 형태만 따라 그려줘:"
     , 2),
     "character_ref": (
         "THIS {name} — 이 대상의 형태만 따라 그려줘:"
+    , 2),
+    "character_reference": (
+        "THIS {name} — 이 캐릭터의 기본 체형을 따라 그려줘:"
     , 2),
     "prop_ref": (
         "THIS {name} — 이 대상의 형태만 따라 그려줘:"
@@ -127,37 +93,31 @@ V3_IMAGE_LABELS = {
 CHARACTER_PROP_STEMS = {"ai_robot", "robot", "ai_assistant"}
 
 
-def _classify_ref_image(ref_path: Path, use_v3: bool = False) -> tuple[str, int]:
+def _classify_ref_image(ref_path: Path) -> tuple[str, int]:
     """레퍼런스 이미지 경로에서 라벨과 우선순위를 반환.
-
-    use_v3=True: V3_IMAGE_LABELS 사용 (간소화된 한국어 라벨)
-    use_v3=False: IMAGE_LABELS 사용 (v2 영어 라벨)
 
     감지 순서:
       1) 폴더 기반: characters/ → costume_ref, props/ → prop_ref
       2) 파일명 접두어 매칭
       3) 폴백: 기본 라벨 + 중간 우선순위
     """
-    labels = V3_IMAGE_LABELS if use_v3 else IMAGE_LABELS
+    labels = V3_IMAGE_LABELS
     path_parts = [p.lower() for p in ref_path.parts]
     if "characters" in path_parts:
         return labels["costume_ref"]
     elif "props" in path_parts:
         stem = ref_path.stem.lower()
-        # character_prop 감지: 캐릭터급 엔티티는 CHARACTER SOURCE 레벨로 격상
         if stem in CHARACTER_PROP_STEMS:
             return labels["character_prop_ref"]
         if not any(stem.startswith(k) for k in labels):
             return labels["prop_ref"]
     stem = ref_path.stem.lower()
-    # reference/ 직접 경로의 character_prop 감지
     if stem in CHARACTER_PROP_STEMS:
         return labels["character_prop_ref"]
     for key, (label, priority) in labels.items():
         if stem.startswith(key):
             return label, priority
-    fallback_label = f"참조 이미지 ({ref_path.name}):" if use_v3 else f"Reference image ({ref_path.name}):"
-    return fallback_label, 4
+    return f"참조 이미지 ({ref_path.name}):", 4
 
 
 SECTION_ORDER = ["TITLECARD", "SECTION00_HOOK", "SECTION01", "SECTION02", "SECTION03", "SECTION04_OUTRO"]
@@ -274,110 +234,36 @@ def extract_thinking_level_from_yaml(content: str) -> str:
     return m.group(1).lower() if m else "high"
 
 
-def detect_prompt_version(content: str) -> str:
-    """v2 vs v3 자동 감지.
-
-    v3: ref_images YAML 필드 존재
-    v2: [SOURCE REFERENCES] 또는 [SCENE] 태그 존재
-    """
-    if re.search(r"^ref_images:\s*\n\s+-", content, re.MULTILINE):
-        return "v3"
-    return "v2"
-
-
-def extract_ref_filenames(prompt_text: str) -> list[str]:
-    """프롬프트에서 레퍼런스 파일명 목록을 추출.
-
-    두 가지 형식 지원:
-    1. (refer to: file.png for ...) — 기존 형식
-    2. [SOURCE REFERENCES]          — 신규 형식
-       - file.png : description
-    """
-    filenames = []
-    for m in re.finditer(r"\(refer to(?:[^)]*)\)", prompt_text):
-        for f in re.findall(r"([a-zA-Z0-9_/.\-\\]+\.(?:jpg|jpeg|png))", m.group(0)):
-            if f not in filenames:
-                filenames.append(f)
-    src_match = re.search(r"\[SOURCE REFERENCES\](.*?)(?:\n\n|\n\{|\Z)", prompt_text, re.DOTALL)
-    if src_match:
-        for f in re.findall(r"([a-zA-Z0-9_/.\-\\]+\.(?:jpg|jpeg|png))", src_match.group(1)):
-            if f not in filenames:
-                filenames.append(f)
-    return filenames
-
-
 def resolve_ref_path(reference_dir: Path, relative_path: str) -> Path:
-    """refer-to 경로를 버전 자동 탐색으로 해석.
+    """ref_images 경로를 해석.
 
-    props/vN/file.jpeg → 가장 높은 버전 폴더에서 탐색.
-    확장자 불일치(.jpeg ↔ .png) 자동 보정.
-    character_ref.jpeg 없으면 character_reference.jpeg (채널 공통)로 폴백.
+    1) reference_dir 기준: props/run001/file.jpeg → reference_dir/props/run001/file.jpeg
+    2) 워크스페이스 루트 기준: assets/reference/style/... → workspace_root/assets/...
+    존재하지 않으면 그대로 반환 (호출측에서 존재 확인).
     """
-    exact = reference_dir / relative_path
-    if exact.exists():
-        return exact
-
-    rel = Path(relative_path)
-    alt_ext = ".png" if rel.suffix.lower() in (".jpeg", ".jpg") else ".jpeg"
-    alt_exact = reference_dir / rel.with_suffix(alt_ext)
-    if alt_exact.exists():
-        print(f"   > 확장자 폴백: {rel.name} → {alt_exact.name}")
-        return alt_exact
-
-    if rel.stem.lower() == "character_ref":
-        fallback = reference_dir / "basic_charater_ref.png"
-        if fallback.exists():
-            print(f"   > character_ref 폴백 → basic_charater_ref.png")
-            return fallback
-        # 채널 공통 character_reference.jpeg 폴백
-        channel_fallback = reference_dir.parents[2] / "assets" / "reference" / "style" / "character_reference.jpeg"
-        if channel_fallback.exists():
-            print(f"   > character_ref 폴백 → {channel_fallback}")
-            return channel_fallback
-
-    # basic_char*ref* 계열 오타 폴백 (basic_charater_ref / basic_charector_ref 등)
-    if re.search(r"basic_char\w*ref", rel.stem.lower()):
-        candidates = sorted(reference_dir.glob("basic_char*ref*.png"))
-        if candidates:
-            print(f"   > basic_char*ref 폴백 → {candidates[0].name}")
-            return candidates[0]
-
-    parts = rel.parts
-    if len(parts) >= 3 and parts[0] in ("props", "characters"):
-        filename = parts[-1]
-        filename_alt = str(Path(filename).with_suffix(alt_ext))
-        parent = reference_dir / parts[0]
-        if parent.exists():
-            # run 기반 (run001, run002, ...) + legacy v 기반 (v1, v2, ...) 통합 탐색
-            run_dirs = sorted(
-                [d for d in parent.iterdir() if d.is_dir() and d.name.startswith("run") and d.name[3:].isdigit()],
-                key=lambda p: int(p.name[3:]),
-                reverse=True,
-            )
-            v_dirs = sorted(
-                [d for d in parent.iterdir() if d.is_dir() and d.name.startswith("v") and d.name[1:].isdigit()],
-                key=lambda p: int(p.name[1:]),
-                reverse=True,
-            )
-            for vdir in run_dirs + v_dirs:
-                if (vdir / filename).exists():
-                    return vdir / filename
-                if (vdir / filename_alt).exists():
-                    print(f"   > 버전폴더 확장자 폴백: {filename} → {filename_alt}")
-                    return vdir / filename_alt
-    return exact
+    # 1) reference_dir 기준 시도
+    resolved = reference_dir / relative_path
+    if resolved.exists():
+        return resolved
+    # 2) 워크스페이스 루트 기준 시도 (assets/reference/style/ 등 채널 공통 경로)
+    ws_root = reference_dir
+    while ws_root.name and ws_root.name != "projects":
+        ws_root = ws_root.parent
+    if ws_root.name == "projects":
+        ws_root = ws_root.parent
+        ws_resolved = ws_root / relative_path
+        if ws_resolved.exists():
+            return ws_resolved
+    return resolved
 
 
 def generate_image(client, model_name: str, text_prompt: str, ref_image_paths: list[Path],
-                    thinking_level: str = "high", use_v3: bool = False,
-                    preserve_order: bool = False, style_ref_path: Path = None,
+                    thinking_level: str = "high", style_ref_path: Path = None,
                     style_ref_label: str = None) -> bytes:
     """레퍼런스 이미지 + 텍스트 프롬프트로 이미지를 생성하여 bytes 반환.
 
     API 전달 순서: [스타일참조, 라벨1, 이미지1, 라벨2, 이미지2, ..., 텍스트 프롬프트]
-
-    v3 모드 (preserve_order=True): ref_images 순서 유지 (THIS {name} 참조와 일치)
-    v2 모드 (preserve_order=False): 우선순위 정렬 character_ref(1) → costume_ref(2) → prop_ref(3)
+    ref_images 순서 유지 (THIS {name} 참조와 일치).
     style_ref_label: 커스텀 스타일 참조 라벨 (None이면 기본값 사용)
     """
     contents = []
@@ -395,19 +281,8 @@ def generate_image(client, model_name: str, text_prompt: str, ref_image_paths: l
     if ref_image_paths:
         labeled = []
         for ref_path in ref_image_paths:
-            label, priority = _classify_ref_image(ref_path, use_v3=use_v3)
+            label, priority = _classify_ref_image(ref_path)
             labeled.append((priority, label, ref_path))
-        if not preserve_order:
-            labeled.sort(key=lambda x: x[0])
-
-        # 다중 레퍼런스 시 스타일 전이 방지 경고 삽입
-        if len(labeled) >= 3:
-            contents.append(
-                "여러 참조 이미지가 첨부되어 있어. "
-                "모든 요소에 동일한 THIS style의 드로잉 스타일을 유지해줘. "
-                "참조 이미지의 렌더링 스타일을 혼합하지 마. "
-                "배경은 반드시 순백 캔버스로 유지해줘."
-            )
 
         for priority, label, ref_path in labeled:
             contents.append(label.replace("{name}", ref_path.stem))
@@ -676,17 +551,18 @@ def run_phase0(client, project_root: Path, run_id: str, reference_dir: Path, ove
         if m_model and m_model.group(1).upper() == "NB-PRO":
             model_str = "gemini-3-pro-image-preview"
 
-        # v3 ref_images YAML 필드에서 공통 레퍼런스 추출 (start/end 공유)
-        is_v3 = detect_prompt_version(text) == "v3"
-        v3_ref_paths = []
-        if is_v3:
-            for ref_rel in extract_ref_from_yaml(text):
-                ref_p = resolve_ref_path(reference_dir, ref_rel)
-                if ref_p.exists() and ref_p not in v3_ref_paths:
-                    v3_ref_paths.append(ref_p)
+        # ref_images YAML 필드에서 공통 레퍼런스 추출 (start/end 공유)
+        ref_paths_shared = []
+        for ref_rel in extract_ref_from_yaml(text):
+            ref_p = resolve_ref_path(reference_dir, ref_rel)
+            if ref_p.exists():
+                if ref_p not in ref_paths_shared:
+                    ref_paths_shared.append(ref_p)
+            else:
+                print(f"   [Shot {shot_id}] ⚠️ ref 파일 미존재 → 스킵: {ref_rel}")
 
-        # v3 thinking_level
-        v3_thinking = extract_thinking_level_from_yaml(text) if is_v3 else "high"
+        # thinking_level
+        thinking_level_shared = extract_thinking_level_from_yaml(text)
 
         # 출력 경로
         out_dir = project_root / "09_assets" / "images" / run_id
@@ -700,13 +576,7 @@ def run_phase0(client, project_root: Path, run_id: str, reference_dir: Path, ove
             skipped += 1
         else:
             print(f"   [Shot {shot_id} start] 🖼️  생성 중...")
-            # v3: YAML ref_images 사용, v2: 프롬프트 텍스트에서 파싱
-            ref_paths = list(v3_ref_paths) if v3_ref_paths else []
-            if not ref_paths:
-                for f in extract_ref_filenames(start_prompt):
-                    ref_p = resolve_ref_path(reference_dir, f)
-                    if ref_p.exists() and ref_p not in ref_paths:
-                        ref_paths.append(ref_p)
+            ref_paths = list(ref_paths_shared)
 
             # 후행 --- 제거
             lines = start_prompt.splitlines()
@@ -714,18 +584,13 @@ def run_phase0(client, project_root: Path, run_id: str, reference_dir: Path, ove
                 lines.pop()
             clean_prompt = "\n".join(lines).strip()
 
-            if is_v3:
-                thinking_level = v3_thinking
-            else:
-                thinking_match = re.search(r"\[thinking:\s*(low|high)\]", start_prompt, re.IGNORECASE)
-                thinking_level = thinking_match.group(1).lower() if thinking_match else "high"
+            thinking_level = thinking_level_shared
 
             if ref_paths:
                 print(f"   > 레퍼런스 첨부: {', '.join(r.name for r in ref_paths)}")
 
             try:
-                img_bytes = generate_image(client, model_str, clean_prompt, ref_paths, thinking_level,
-                                           use_v3=is_v3, preserve_order=is_v3)
+                img_bytes = generate_image(client, model_str, clean_prompt, ref_paths, thinking_level)
                 start_path.write_bytes(img_bytes)
                 print(f"   ✅ 저장: 09_assets/images/{run_id}/shot{int(shot_id):02d}_start.png")
                 generated += 1
@@ -740,31 +605,20 @@ def run_phase0(client, project_root: Path, run_id: str, reference_dir: Path, ove
                 skipped += 1
             else:
                 print(f"   [Shot {shot_id} end] 🖼️  생성 중...")
-                # v3: YAML ref_images 사용, v2: 프롬프트 텍스트에서 파싱
-                ref_paths = list(v3_ref_paths) if v3_ref_paths else []
-                if not ref_paths:
-                    for f in extract_ref_filenames(end_prompt):
-                        ref_p = resolve_ref_path(reference_dir, f)
-                        if ref_p.exists() and ref_p not in ref_paths:
-                            ref_paths.append(ref_p)
+                ref_paths = list(ref_paths_shared)
 
                 lines = end_prompt.splitlines()
                 while lines and lines[-1].strip() in ("---", ""):
                     lines.pop()
                 clean_prompt = "\n".join(lines).strip()
 
-                if is_v3:
-                    thinking_level = v3_thinking
-                else:
-                    thinking_match = re.search(r"\[thinking:\s*(low|high)\]", end_prompt, re.IGNORECASE)
-                    thinking_level = thinking_match.group(1).lower() if thinking_match else "high"
+                thinking_level = thinking_level_shared
 
                 if ref_paths:
                     print(f"   > 레퍼런스 첨부: {', '.join(r.name for r in ref_paths)}")
 
                 try:
-                    img_bytes = generate_image(client, model_str, clean_prompt, ref_paths, thinking_level,
-                                               use_v3=is_v3, preserve_order=is_v3)
+                    img_bytes = generate_image(client, model_str, clean_prompt, ref_paths, thinking_level)
                     end_path.write_bytes(img_bytes)
                     print(f"   ✅ 저장: 09_assets/images/{run_id}/shot{int(shot_id):02d}_end.png")
                     generated += 1
@@ -891,10 +745,7 @@ def process_file(client, filepath: Path, project_root: Path, reference_dir: Path
     if m_model and m_model.group(1).upper() == "NB-PRO":
         model_str = "gemini-3-pro-image-preview"
 
-    # v3 vs v2 자동 감지 (파일 레벨)
-    is_v3 = detect_prompt_version(text) == "v3"
-    version_label = "v3" if is_v3 else "v2"
-    print(f"   > 사용 모델: {model_str} | 프롬프트: {version_label}")
+    print(f"   > 사용 모델: {model_str}")
 
     shots = parse_yaml_shot_records(text)
     if not shots:
@@ -928,72 +779,17 @@ def process_file(client, filepath: Path, project_root: Path, reference_dir: Path
         print(f"   [Shot {shot_id}] 🖼️  생성 중... ({asset_rel_path})")
         out_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # v3: ref_images YAML 필드에서 직접 읽음 (순서 유지)
-        # v2: flow_prompt 내 [SOURCE REFERENCES] 파싱
+        # ref_images YAML 필드에서 직접 읽음 (순서 유지)
+        # 주의: ref_images가 빈 배열 []일 때도 분기 유지 (falsy 방지 — is not None 체크)
         ref_image_paths = []
-        if is_v3 and shot.get("ref_images"):
+        if shot.get("ref_images") is not None:
             for f in shot["ref_images"]:
                 ref_p = resolve_ref_path(reference_dir, f)
-                if ref_p.exists() and ref_p not in ref_image_paths:
-                    ref_image_paths.append(ref_p)
-        else:
-            for f in extract_ref_filenames(prompt_raw):
-                ref_p = resolve_ref_path(reference_dir, f)
-                if ref_p.exists() and ref_p not in ref_image_paths:
-                    ref_image_paths.append(ref_p)
-
-        # 채널 공통 턴어라운드/캐릭터 참조 시트 자동 첨부
-        # has_human 3값: main/anonym/none
-        _ws_root = reference_dir.parents[3]  # 09_assets/reference/ → 09_assets → project_root → projects → workspace
-        _style_dir = _ws_root / "assets" / "reference" / "style"
-        _has_human = str(shot.get("has_human", "none")).lower()
-        # 레거시 true/false 호환
-        if _has_human == "true":
-            _has_human = "main"
-        elif _has_human == "false":
-            _has_human = "none"
-
-        if _has_human == "main":
-            has_character_ref = any("characters" in str(p) for p in ref_image_paths)
-            if not has_character_ref:
-                _main_ta = _style_dir / "main_turnaround.jpeg"
-                if _main_ta.exists() and _main_ta not in ref_image_paths:
-                    ref_image_paths.insert(0, _main_ta)
-                    print(f"   > 채널 턴어라운드 자동 첨부: {_main_ta.name}")
-        elif _has_human == "anonym":
-            # anonym에 main_turnaround가 잘못 들어온 경우 character_reference로 교체
-            _main_ta_path = _style_dir / "main_turnaround.jpeg"
-            if _main_ta_path in ref_image_paths:
-                ref_image_paths.remove(_main_ta_path)
-                print(f"   > ⚠️ anonym Shot에서 main_turnaround 제거 (잘못된 참조)")
-            _char_ref = _style_dir / "character_reference.jpeg"
-            has_char_ref = any("character_reference" in str(p) for p in ref_image_paths)
-            if not has_char_ref:
-                if _char_ref.exists() and _char_ref not in ref_image_paths:
-                    ref_image_paths.insert(0, _char_ref)
-                    print(f"   > 익명 캐릭터 참조 자동 첨부: {_char_ref.name}")
-
-        # style_ref 무조건 첨부 — 모든 Shot에 스타일 일관성 보장
-        _style_ref = _style_dir / "style_reference.png"
-        if _style_ref.exists() and _style_ref not in ref_image_paths:
-            ref_image_paths.insert(0, _style_ref)
-            print(f"   > 스타일 참조 자동 첨부: {_style_ref.name}")
-
-        # ref_images가 비어있을 때 (style_ref만 있음) — ANCHOR 소품 자동 추가로 스타일 보강
-        _non_style_refs = [p for p in ref_image_paths if "style_reference" not in str(p)]
-        if not _non_style_refs:
-            # ANCHOR 소품 중 첫 번째를 자동 추가 (프로젝트별 가장 대표적 소품)
-            _anchor_props_dir = reference_dir / "props"
-            if _anchor_props_dir.exists():
-                for _run_dir in sorted(_anchor_props_dir.iterdir(), reverse=True):
-                    if _run_dir.is_dir():
-                        _prop_files = sorted(_run_dir.glob("*.jpeg")) + sorted(_run_dir.glob("*.png"))
-                        if _prop_files:
-                            _fallback_prop = _prop_files[0]
-                            if _fallback_prop not in ref_image_paths:
-                                ref_image_paths.append(_fallback_prop)
-                                print(f"   > 스타일 보강 소품 자동 첨부: {_fallback_prop.name}")
-                            break
+                if ref_p.exists():
+                    if ref_p not in ref_image_paths:
+                        ref_image_paths.append(ref_p)
+                else:
+                    print(f"   [Shot {shot_id}] ⚠️ ref 파일 미존재 → 스킵: {f}")
 
         # 체이닝 모드: 이전 Shot 생성 이미지를 ref에 추가
         if chain_mode and _prev_chain_image and _prev_chain_image.exists():
@@ -1012,17 +808,18 @@ def process_file(client, filepath: Path, project_root: Path, reference_dir: Path
             lines.pop()
         prompt_clean = "\n".join(lines).strip()
 
-        # thinking_level: v3는 YAML 필드, v2는 flow_prompt 내 [thinking:] 파싱
-        if is_v3:
-            thinking_level = shot.get("thinking_level", "high")
-        else:
-            thinking_match = re.search(r"\[thinking:\s*(low|high)\]", prompt_raw, re.IGNORECASE)
-            thinking_level = thinking_match.group(1).lower() if thinking_match else "high"
+        # thinking_level: YAML 필드에서 읽기
+        thinking_level = shot.get("thinking_level", "high")
+
+        # ref_images에 style_reference가 포함되어 있으면 style_ref_path 중복 방지
+        _effective_style_ref = style_ref_path
+        if any("style_reference" in str(p) for p in ref_image_paths):
+            _effective_style_ref = None
 
         try:
             image_bytes = generate_image(
                 client, model_str, prompt_clean, ref_image_paths, thinking_level,
-                use_v3=is_v3, preserve_order=is_v3, style_ref_path=style_ref_path,
+                style_ref_path=_effective_style_ref,
             )
             out_path.write_bytes(image_bytes)
             print(f"   ✅ 저장: {asset_rel_path}")
