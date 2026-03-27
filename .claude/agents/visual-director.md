@@ -365,6 +365,16 @@ image_prompt 작성 중 아래 조건을 감지하면 메모리에 피드백 항
 | VS-10 | has_human:none + 소품 없음 (순백 PAUSE Shot) — 이미지 생성 시 의미 없는 결과물 위험 | NOTE | breath/PAUSE Shot은 이미지 생성 스킵 검토 권장. 생성 시 최소 시각 요소(레일 자국, 잉크 점 등) 포함 |
 | VS-11 | 메인 캐릭터의 의상 색(스카프 등)이 ref 시트와 다르게 채색될 위험 — image_prompt P4에서 장면 포인트만 지정하고 캐릭터 색은 ref 위임이지만, NB2가 무시하는 경우 있음 | NOTE | P4에 "캐릭터의 의상 색은 참조 이미지 그대로 유지" 문구 강화. 장면 포인트 색과 캐릭터 의상 색이 혼동되지 않도록 대상 명확히 지정 |
 | VS-12 | 이미지 외곽에 사각 프레임/테두리 선이 렌더링됨 — NB2가 "frame", "border", "panel" 키워드 없이도 간혹 프레임 추가 | NOTE | image_prompt에 "프레임이나 테두리 선 없이" 명시 추가 검토. self-check F항 "frame/border/panel 없음" 확인 강화 |
+| VS-13 | iv_prompt에 Veo 정책 위반 가능 표현 포함 — "haze", "smoke", "explosion" 등 유해 콘텐츠 오탐 트리거 | FLAG | 해당 표현을 중립적 대체어로 교체 (예: "heat haze" → "shimmer of light") |
+| VS-14 | iv_prompt [ACTION]에 과격한 동작 묘사 → Veo가 캐릭터 외형(체형·비율)을 변형시킴 | FLAG | 동작은 **미세·점진적** 수준으로 제한. "springs backward", "flailing", "stretches" 등 과격 동사 금지. "slowly shifts", "gently tilts" 수준으로 |
+| VS-15 | iv_prompt가 장면 변환/생성을 지시 → Veo가 스케치 스타일을 이탈하여 3D 애니메이션으로 재구성 | BLOCK | [ACTION]은 **기존 스케치가 미세하게 움직이는** 수준만. "grow upward", "becomes dramatic", "buildings appear" 등 장면 변환 묘사 금지. 카메라도 단일 동작만 (2회 변경 금지) |
+| VS-16 | 이미지에 텍스트(한글/숫자)가 포함된 Shot → Veo I2V가 텍스트를 왜곡·깨뜨림 | NOTE | 텍스트 포함 이미지는 I2V 영상 생성 시 텍스트 왜곡 불가피. image_prompt에서 텍스트 요소 최소화하거나, 해당 Shot은 정적 이미지 사용 검토 |
+| VS-17 | iv_prompt 카메라 패닝이 이미지 밖 영역 생성 유발 + [ACTION]에서 기존 요소 위치/상태 변경 지시 | FLAG | 카메라 패닝은 이미지 내부에서 소화 가능한 범위만. "positions shift", "hands move" 등 기존 이미지 요소 변경 금지. 정적 요소는 "stays exactly as drawn" 명시 |
+| VS-18 | iv_prompt에 광선·펄스·글로우 등 VFX 표현 → Veo가 스케치 스타일에 맞지 않는 디지털 이펙트 생성 | FLAG | "emit pulse", "glow", "beam", "flash", "radiate" 등 금지. 대체: [ENVIRONMENT] None 또는 최소한의 표현만 |
+| VS-19 | iv_prompt "paper-edge flutter" → Veo가 종이 프레임/테두리를 리터럴하게 렌더링 | FLAG | "paper", "page", "edge" 등 종이 세계관 은유를 Veo가 문자 그대로 해석. [ENVIRONMENT]에서 사용 금지 |
+| VS-20 | iv_prompt에 실사 인체 동작 묘사 (fingers spread, presenting gesture) → Veo가 스케치를 실사 모델로 전환 | BLOCK | 인체 세부 동작(손가락, 제스처) 묘사 금지. "subtle weight shift", "head tilts" 수준만 |
+| VS-21 | **image_prompt**에 광선/발광 표현 ("빛나는", "발광", "빛줄기") → 이미지 자체에 스케치 이탈 VFX 포함 → iv_prompt 수정만으로는 해결 불가 | FLAG | 빛 표현은 "워시 색"으로만. "빛나는"→"warm gold 워시가 입혀진", "발광"→"색이 번진", "빛줄기"→"가느다란 잉크 선" |
+| VS-22 | iv_prompt [ACTION]이 "remains still" / "stays as drawn"만 → Veo가 자체 판단으로 종이 넘김 등 엉뚱한 효과 추가 | FLAG | **"아무것도 하지 마"는 금지**. 최소 1개의 의도된 미세 동작 필수 (증기 한 줄기, 빛의 미세 변화, 먼지 1개 등) |
 
 ### 피드백 출력
 

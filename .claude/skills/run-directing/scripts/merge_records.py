@@ -514,6 +514,17 @@ def main():
         print("[ERROR] 04 base 파일이 없습니다.")
         sys.exit(1)
 
+    # 정합성 경고: base ≠ delta 수 불일치
+    _merge_warnings = []
+    if delta06_files and len(base_files) != len(delta06_files):
+        msg = f"04 base({len(base_files)}개) ≠ 05 delta({len(delta06_files)}개) — base_run 설정 확인 필요"
+        print(f"   ⚠️ {msg}")
+        _merge_warnings.append(msg)
+    if delta07_files and len(base_files) != len(delta07_files):
+        msg = f"04 base({len(base_files)}개) ≠ 06 delta({len(delta07_files)}개) — 누락 Shot 확인 필요"
+        print(f"   ⚠️ {msg}")
+        _merge_warnings.append(msg)
+
     # _meta.md에서 VOICE_ID 추출
     voice_id = ""
     meta_path = project_root / "_meta.md"
@@ -575,6 +586,34 @@ def main():
     done_count = sum(1 for m in all_merged if m.get("status") == "done")
     pending_count = len(all_merged) - done_count
     print(f"\n   상태: done={done_count} / pending={pending_count}")
+
+    # 피드백 파일 저장 (경고가 있을 때만)
+    if _merge_warnings and not args.dry_run:
+        from datetime import datetime
+        run_id = version if use_manifest else "v1"
+        feedback_dir = project_root / "feedback" / run_id
+        feedback_dir.mkdir(parents=True, exist_ok=True)
+        ts = datetime.now().strftime("%Y%m%dT%H%M")
+        feedback_path = feedback_dir / f"merge-records_{ts}.md"
+        lines = [
+            "---",
+            "from: merge-records",
+            "to: system",
+            f"run_id: {run_id}",
+            f"created: {datetime.now().isoformat()}",
+            f"warning_count: {len(_merge_warnings)}",
+            "",
+            "items:",
+        ]
+        for i, w in enumerate(_merge_warnings, 1):
+            lines.append(f"  - id: MR-{i:03d}")
+            lines.append(f"    severity: FLAG")
+            lines.append(f"    type: COUNT_MISMATCH")
+            lines.append(f"    detail: |")
+            lines.append(f"      {w}")
+        lines.append("---")
+        feedback_path.write_text("\n".join(lines), encoding="utf-8")
+        print(f"\n📋 피드백 저장: {feedback_path.relative_to(project_root)}")
 
 
 

@@ -121,6 +121,16 @@ items:
 | VS-10 | has_human:none + 소품 없음 (순백 PAUSE Shot) — 이미지 생성 불필요 또는 의미 없는 결과물 위험 | NOTE |
 | VS-11 | 메인 캐릭터 의상 색(스카프 등)이 ref 시트와 다르게 채색됨 — NB2가 장면 포인트 색을 캐릭터에 적용하는 오류 | NOTE |
 | VS-12 | 이미지 외곽에 사각 프레임/테두리 선 렌더링 — NB2가 "frame" 키워드 없이도 간혹 프레임 추가 | NOTE |
+| VS-13 | iv_prompt에 Veo 정책 위반 가능 표현 (haze, smoke, explosion 등) → 영상 생성 거부 | FLAG |
+| VS-14 | iv_prompt [ACTION] 과격한 동작 → Veo가 캐릭터 외형 변형 (springs, flailing, stretches 등) | FLAG |
+| VS-15 | iv_prompt가 장면 변환/생성 지시 → Veo가 스케치 이탈, 3D 애니메이션으로 재구성 | BLOCK |
+| VS-16 | 이미지에 텍스트(한글/숫자) 포함 → Veo I2V가 텍스트 왜곡·깨뜨림 | NOTE |
+| VS-17 | iv_prompt 카메라 패닝 → 이미지 밖 영역 임의 생성 + 기존 요소 위치/상태 변경 | FLAG |
+| VS-18 | iv_prompt에 VFX 표현 (pulse, glow, beam) → 스케치 스타일 이탈 디지털 이펙트 | FLAG |
+| VS-19 | iv_prompt "paper-edge flutter" → Veo가 종이 프레임을 리터럴하게 렌더링 | FLAG |
+| VS-20 | iv_prompt 실사 인체 동작 묘사 (fingers spread, presenting gesture) → 스케치가 실사 모델로 전환 | BLOCK |
+| VS-21 | image_prompt에 광선/발광 표현 → 이미지 자체에 VFX 포함, iv_prompt 수정으로 해결 불가 | FLAG |
+| VS-22 | iv_prompt "remains still" only → Veo가 자체 판단으로 엉뚱한 효과(종이 넘김 등) 추가 | FLAG |
 
 ### 4.2 audio-director → shot-composer
 
