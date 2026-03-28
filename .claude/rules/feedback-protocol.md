@@ -131,6 +131,7 @@ items:
 | VS-20 | iv_prompt 실사 인체 동작 묘사 (fingers spread, presenting gesture) → 스케치가 실사 모델로 전환 | BLOCK |
 | VS-21 | image_prompt에 광선/발광 표현 → 이미지 자체에 VFX 포함, iv_prompt 수정으로 해결 불가 | FLAG |
 | VS-22 | iv_prompt "remains still" only → Veo가 자체 판단으로 엉뚱한 효과(종이 넘김 등) 추가 | FLAG |
+| VS-23 | 카메라/동작이 캐릭터의 보이지 않는 면(뒷면·옆면)을 드러냄 → Veo가 상상으로 그려 외형 변형 (넥커치프→목도리, 체형 왜곡) | BLOCK |
 
 ### 4.2 audio-director → shot-composer
 

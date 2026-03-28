@@ -243,8 +243,18 @@ Duration: 5s
 
 ## 금지 사항
 
+### ⚠️ 보이지 않는 면 원칙 (가장 중요)
+
+Veo I2V는 이미지의 **보이는 면만** 알고 있다.
+캐릭터의 뒷면·옆면이 드러나는 동작/카메라를 지시하면, Veo가 보이지 않는 면을 **상상해서 그린다** — 넥커치프가 목도리로 변하고, 체형이 왜곡된다.
+
+- ❌ 캐릭터가 돌아서는 동작: `turns around`, `rotates`, `spins`
+- ❌ 카메라가 캐릭터 주위를 도는 동작: `orbit`, `dolly around`, `circle`
+- ❌ 캐릭터 뒷면이 드러나는 틸트/패닝 (로우앵글에서 위로 틸트 → 뒷통수 노출)
+- ✅ **정면 상태에서의 미세 동작만** — 고개 살짝 기울임, 무게 이동, 시선 변화
+
 ### 캐릭터 외형 변형 유발 동작
-- ❌ `springs backward`, `torso arching`, `arms flailing`, `mouth stretches`, `body contorts`, `limbs extend`
+- ❌ `springs backward`, `torso arching`, `arms flailing`, `mouth stretches`, `body contorts`, `limbs extend`, `spine lengthens`, `neck stretches`
 - ✅ `slowly tilts head`, `shifts weight`, `one arm rises slightly`, `leans forward`
 
 ### Veo 정책 금지어
@@ -260,6 +270,7 @@ Duration: 5s
 | `glow`, `pulse`, `beam`, `radiate` | VFX 이펙트 |
 | `paper-edge flutter`, `page curl` | 종이 프레임 리터럴 렌더링 |
 | `fingers spread`, `presenting gesture` | 실사 인체 전환 |
+| `neckerchief catches breeze`, `scarf flutters`, `hair pulling` | 의상/액세서리 형태 변형 (없는 매듭·끈 생성) → 의상 움직임 묘사 금지. Veo가 자동으로 천을 흔드는 경우 `All clothing stays flat against the body` 억제 문구 추가 |
 | `grow upward`, `transforms into` | 장면 변환/생성 |
 
 ### 운영 규칙
